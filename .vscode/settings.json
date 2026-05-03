@@ -1,0 +1,10 @@
+{
+    "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.checkOnSave": true,
+    "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
+        "coprocessor/pico/Cargo.toml",
+    ],
+}

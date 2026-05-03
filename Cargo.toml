@@ -1,0 +1,14 @@
+[workspace]
+resolver = "3"
+members = ["./coprocessor/brain"]
+exclude = ["./coprocessor/pico"]
+
+[workspace.dependencies]
+shrewnit = { git = "https://github.com/Gavin-Niederman/shrewnit.git", rev = "73617f18d1faf79ffed097d1fc7ef0e1ae8663de" }
+vexide = { version = "0.8.0", features = ["default-sdk", "full"] }
+futures-lite = "2.6.1"
+
+[patch.crates-io]
+# Patch vex-sdk to support latest nightly rust
+vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk", rev = "ff94966cf881ee98fbaba432ab5e9061d8d422f9" }
+vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk", rev = "ff94966cf881ee98fbaba432ab5e9061d8d422f9" }

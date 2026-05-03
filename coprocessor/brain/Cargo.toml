@@ -1,0 +1,22 @@
+[package]
+name = "coprocessor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bytes = "1.11.1"
+cobs = "0.5.1"
+nom = "8.0.0"
+shrewnit.workspace = true
+vexide.workspace = true
+futures-lite.workspace = true
+
+[package.metadata.v5]
+upload-strategy = "differential"
+slot = 6
+icon = "pizza"
+compress = true
+
+[[bin]]
+name = "coprocessor-testing"
+path = "src/testing.rs"

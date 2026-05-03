@@ -1,0 +1,5 @@
+[toolchain]
+channel = "nightly-2026-04-26"
+components = ["rustc", "cargo", "rust-src", "clippy", "rustfmt", "rust-analyzer"]
+profile = "minimal"
+targets = ["thumbv8m.main-none-eabihf"]

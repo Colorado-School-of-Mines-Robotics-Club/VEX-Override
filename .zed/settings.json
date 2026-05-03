@@ -1,0 +1,18 @@
+{
+    "lsp": {
+        "rust-analyzer": {
+            "initialization_options": {
+                "cargo": {
+                    "allTargets": false,
+                },
+                "check": {
+                    "command": "clippy",
+                    "features": "all",
+                    "workspace": true,
+                },
+                "checkOnSave": true,
+                "linkedProjects": ["Cargo.toml", "coprocessor/pico/Cargo.toml"],
+            },
+        },
+    },
+}
