@@ -42,6 +42,8 @@
                         picotool       # Flashing over BOOTSEL
                         pioasm         # Official PIO compiler
                         tio            # Allows reading serial devices (like USB)
+                        # PCB development
+                        kicad
                     ]);
                 };
             }
