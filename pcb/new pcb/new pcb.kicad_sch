@@ -4966,12 +4966,6 @@
 		(uuid "453a4bd3-8eb6-40fb-87d1-ff786221a674")
 	)
 	(junction
-		(at 157.48 25.4)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "45f807b7-fbe0-4f16-8092-9888e516e3a5")
-	)
-	(junction
 		(at 132.08 133.35)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5006,12 +5000,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "6dae817a-178f-423d-9449-555ca0d0b958")
-	)
-	(junction
-		(at 140.97 35.56)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "709a5b92-42b9-4b9d-97da-37c3f849b0fa")
 	)
 	(junction
 		(at 53.34 165.1)
@@ -5128,22 +5116,10 @@
 		(uuid "d3d05189-5187-4f7c-907a-0e90c323fe2b")
 	)
 	(junction
-		(at 154.94 27.94)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "d6e0ad3a-15ff-4e53-ba5a-5ae716fad252")
-	)
-	(junction
 		(at 138.43 85.09)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "dabd7189-e8ce-45db-988a-05a09418059b")
-	)
-	(junction
-		(at 160.02 40.64)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "dd1fe9a2-b276-4164-b4cb-ffa0c9685675")
 	)
 	(junction
 		(at 132.08 128.27)
@@ -5847,16 +5823,6 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 35.56) (xy 135.89 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4a0834f2-66a0-4240-b627-920599ac9811")
-	)
-	(wire
-		(pts
 			(xy 175.26 95.25) (xy 176.53 95.25)
 		)
 		(stroke
@@ -5894,16 +5860,6 @@
 			(type default)
 		)
 		(uuid "4c8a7380-a1c9-4e77-b427-67252d92b619")
-	)
-	(wire
-		(pts
-			(xy 135.89 27.94) (xy 130.81 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4d8a067b-619c-46a2-a0e6-f0a2c78d66c2")
 	)
 	(wire
 		(pts
@@ -6027,16 +5983,6 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 35.56) (xy 149.86 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "561d30a3-6a67-4ebb-a085-a753a1c25ba2")
-	)
-	(wire
-		(pts
 			(xy 142.24 68.58) (xy 142.24 77.47)
 		)
 		(stroke
@@ -6154,16 +6100,6 @@
 			(type default)
 		)
 		(uuid "62f405d3-c3ad-47d6-8c66-00963ca57eb9")
-	)
-	(wire
-		(pts
-			(xy 160.02 40.64) (xy 160.02 49.53)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6550c958-c0d2-41fd-899d-7d75cfa8fea5")
 	)
 	(wire
 		(pts
@@ -6347,16 +6283,6 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 25.4) (xy 140.97 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "756baef4-0fcf-494d-873c-e5e5009d61c2")
-	)
-	(wire
-		(pts
 			(xy 109.22 87.63) (xy 105.41 87.63)
 		)
 		(stroke
@@ -6474,16 +6400,6 @@
 			(type default)
 		)
 		(uuid "81a3ecb6-336b-4088-937c-bf8b6afa557b")
-	)
-	(wire
-		(pts
-			(xy 135.89 35.56) (xy 135.89 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "84bf757d-7504-47e1-ac12-d471f7ece3b5")
 	)
 	(wire
 		(pts
@@ -6967,16 +6883,6 @@
 	)
 	(wire
 		(pts
-			(xy 130.81 40.64) (xy 160.02 40.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b4d77fee-b0e2-426d-a4ec-6109416df130")
-	)
-	(wire
-		(pts
 			(xy 109.22 143.51) (xy 111.76 143.51)
 		)
 		(stroke
@@ -7337,16 +7243,6 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 27.94) (xy 154.94 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d3b98adc-ffd0-4989-bc7b-e8215a521612")
-	)
-	(wire
-		(pts
 			(xy 166.37 72.39) (xy 176.53 72.39)
 		)
 		(stroke
@@ -7627,7 +7523,7 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 30.48) (xy 160.02 40.64)
+			(xy 160.02 30.48) (xy 160.02 49.53)
 		)
 		(stroke
 			(width 0)
@@ -7654,16 +7550,6 @@
 			(type default)
 		)
 		(uuid "f4d3c2e0-c0c5-431c-b0e8-7f7a0d33c758")
-	)
-	(wire
-		(pts
-			(xy 157.48 25.4) (xy 140.97 25.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f7bc94c5-20b0-45af-a8ea-2bd5e86b78e4")
 	)
 	(wire
 		(pts
@@ -7707,16 +7593,6 @@
 	)
 	(wire
 		(pts
-			(xy 130.81 35.56) (xy 130.81 40.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fc2bac45-9c75-41df-a259-f5e75637d35f")
-	)
-	(wire
-		(pts
 			(xy 151.13 54.61) (xy 166.37 54.61)
 		)
 		(stroke
@@ -7744,16 +7620,6 @@
 			(type default)
 		)
 		(uuid "fce01f24-6798-4a82-9fb6-91f1e092aab7")
-	)
-	(wire
-		(pts
-			(xy 140.97 35.56) (xy 149.86 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ff39b960-e442-4bcd-8e15-d21c954c13dd")
 	)
 	(symbol
 		(lib_id "Device:LED")
@@ -9682,88 +9548,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 130.81 31.75 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "6ef77c65-e75b-4d76-8ab9-928cbf5cf4b6")
-		(property "Reference" "R13"
-			(at 133.35 30.4799 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "100"
-			(at 133.35 33.0199 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
-			(at 129.032 31.75 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 130.81 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 130.81 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "1c33b9f7-122e-405a-abb4-3a845c11c764")
-		)
-		(pin "2"
-			(uuid "6da74630-789b-48ff-b595-ab78aa494501")
-		)
-		(instances
-			(project "new pcb"
-				(path "/e96a5dd9-0bf6-4981-8ab5-ce3730d0cf85"
-					(reference "R13")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Interface_UART:MAX485E")
 		(at 163.83 133.35 0)
 		(unit 1)
@@ -11268,88 +11052,6 @@
 			(project "new pcb"
 				(path "/e96a5dd9-0bf6-4981-8ab5-ce3730d0cf85"
 					(reference "#PWR08")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 140.97 31.75 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "bc8436b2-917c-4be6-832f-12fc3e4b28f8")
-		(property "Reference" "R12"
-			(at 143.51 30.4799 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "100"
-			(at 143.51 33.0199 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
-			(at 139.192 31.75 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 140.97 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 140.97 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "28dd8cc4-970a-4204-9eb6-700bf35828f0")
-		)
-		(pin "2"
-			(uuid "81e1805a-3c20-4fb5-9e06-39e7bf39ad5d")
-		)
-		(instances
-			(project "new pcb"
-				(path "/e96a5dd9-0bf6-4981-8ab5-ce3730d0cf85"
-					(reference "R12")
 					(unit 1)
 				)
 			)
