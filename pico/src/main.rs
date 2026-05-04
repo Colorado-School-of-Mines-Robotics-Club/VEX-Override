@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![feature(split_array, try_blocks)]
+#![feature(split_array)]
 
 mod lidar;
 mod peripherals;

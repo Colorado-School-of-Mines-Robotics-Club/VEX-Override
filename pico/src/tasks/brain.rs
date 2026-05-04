@@ -1,13 +1,12 @@
-use defmt::{dbg, debug, error};
+use defmt::error;
 use embassy_futures::yield_now;
 use embassy_rp::{
 	gpio::Output,
 	uart::{self, Uart},
 };
-use embassy_time::{Duration, Ticker};
 use static_cell::StaticCell;
 
-use super::otos::{self, OtosAction, OtosPose, OtosScalars};
+use super::otos::{self, OtosAction, OtosPose};
 
 const MTU: usize = 1024;
 

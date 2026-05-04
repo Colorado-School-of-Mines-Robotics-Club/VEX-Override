@@ -11,7 +11,7 @@
                     "workspace": true,
                 },
                 "checkOnSave": true,
-                "linkedProjects": ["Cargo.toml", "coprocessor/pico/Cargo.toml"],
+                "linkedProjects": ["brain/Cargo.toml", "pico/Cargo.toml"],
             },
         },
     },

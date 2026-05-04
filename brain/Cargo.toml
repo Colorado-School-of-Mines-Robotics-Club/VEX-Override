@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["./coprocessor/brain"]
-exclude = ["./coprocessor/pico"]
+members = ["./coprocessor"]
 
 [workspace.dependencies]
 shrewnit = { git = "https://github.com/Gavin-Niederman/shrewnit.git", rev = "73617f18d1faf79ffed097d1fc7ef0e1ae8663de" }

@@ -6,6 +6,3 @@ target = "thumbv8m.main-none-eabihf"
 
 [env]
 DEFMT_LOG = "debug"
-
-[unstable]
-build-std = ["core", "alloc", "panic_abort"]
