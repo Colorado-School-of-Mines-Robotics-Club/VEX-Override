@@ -26,6 +26,11 @@ don't, all the necessary tools are listed below:
 
 ## Project layout
 
+> [!IMPORTANT]
+> Due to limitations in how cargo handles multi-target projects, you
+> must actively be in the `brain/` or `pico/` folder to build or upload
+> code: run `cd brain` or `cd pico` before using any cargo commands.
+
 | Folder                                     | Description                                                                                                                   |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | [`pico/`](./pico/)                         | The code running on the Raspberry Pi Pico 2 microcontroller we use on our bots                                                |
