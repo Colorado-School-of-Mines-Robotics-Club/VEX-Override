@@ -29,8 +29,8 @@ private:
     pros::Imu* imu;
     pros::adi::AnalogIn* rota;
     pros::adi::AnalogIn* rotb;
-    double b0 = 3798;
-    double a0 = 4040;
+    double b0 = 2320;
+    double a0 = 3280;
     std::vector<double> wanted = {0, 0, 0}; // angle x want y want
     swerve_module mod1;
     swerve_module mod2;  

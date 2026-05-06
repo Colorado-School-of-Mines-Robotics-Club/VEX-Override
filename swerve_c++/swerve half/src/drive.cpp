@@ -1,7 +1,7 @@
 #include "main.h"
 
 int a0 = 1750;
-int b0 = 4040;
+int b0 = 1780;
 
 void update_drive(double direction, double speed, double turn) {
 double heading= imu.get_heading();
