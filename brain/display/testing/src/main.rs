@@ -69,9 +69,10 @@ impl TouchStateHandler {
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
 	let mut display_driver = DisplayDriver::new(peripherals.display);
-	let mut display = unsafe { Display::new() };
-	display.set_render_mode(RenderMode::DoubleBuffered);
 	let mut target = EmbeddedGraphicsRenderTarget::new_hinted(&mut display_driver, Rgb888::BLACK);
+	target
+		.display_mut()
+		.set_render_mode(RenderMode::DoubleBuffered);
 
 	let mut state = State::<(), 5>::default();
 	state.odometry.x = -65.0 * Inches;
@@ -90,7 +91,7 @@ async fn main(peripherals: Peripherals) {
 	]);
 
 	let app_start = Instant::now();
-	let mut touch_state_handler = TouchStateHandler::new(display.touch_status());
+	let mut touch_state_handler = TouchStateHandler::new(target.display().touch_status());
 	let mut app = App::new(
 		state,
 		Size::new(
@@ -103,7 +104,7 @@ async fn main(peripherals: Peripherals) {
 	loop {
 		app.set_time(app_start.elapsed());
 
-		if let Some(e) = touch_state_handler.update(display.touch_status()) {
+		if let Some(e) = touch_state_handler.update(target.display().touch_status()) {
 			app.send(e);
 		}
 
@@ -113,7 +114,7 @@ async fn main(peripherals: Peripherals) {
 			app.render_animated(&mut target, &Rgb888::WHITE);
 
 			// Send to the display
-			display.render();
+			target.display_mut().render();
 			target.clear(Rgb888::BLACK);
 		} else {
 			sleep(Display::REFRESH_INTERVAL).await;
