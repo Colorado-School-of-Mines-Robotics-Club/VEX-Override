@@ -1,0 +1,14 @@
+[package]
+name = "display-testing"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+buoyant.workspace = true
+embedded-graphics.workspace = true
+display = { path = "../" }
+vexide.workspace = true
+vexide-embedded-graphics = { git = "https://github.com/vexide/vexide-embedded-graphics", rev = "a19c3577a4cffe0d161b6c346cc846e7f17422d0" }
+embedded-touch = "0.3.0"
+shrewnit.workspace = true
+autons.workspace = true

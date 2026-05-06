@@ -35,8 +35,12 @@
                     ++ (with pkgs; [
                         # General rust development tools
                         evcxr
+                        cargo-watch
                         # Vex brain development
                         cargo-v5
+                        # Display development
+                        SDL2 # Required by embedded-graphics-simulator
+                        imagemagick
                         # Pico development
                         probe-rs-tools # Interfacing with pico probe
                         picotool       # Flashing over BOOTSEL

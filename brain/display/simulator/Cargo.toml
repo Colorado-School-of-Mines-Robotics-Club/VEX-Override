@@ -1,0 +1,11 @@
+[package]
+name = "display-simulator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+buoyant = { workspace = true, features = ["embedded-graphics-simulator"] }
+embedded-graphics.workspace = true
+embedded-graphics-simulator.workspace = true
+display = { path = "../" }
+autons.workspace = true
