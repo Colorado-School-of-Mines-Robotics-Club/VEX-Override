@@ -221,9 +221,12 @@ dependencies = [
  "autons",
  "buoyant",
  "embedded-graphics",
+ "embedded-touch",
  "rusttype",
  "shrewnit",
  "strum",
+ "vexide",
+ "vexide-embedded-graphics",
  "zune-image",
  "zune-jpeg",
 ]
@@ -245,6 +248,7 @@ version = "0.1.0"
 dependencies = [
  "autons",
  "buoyant",
+ "coprocessor",
  "display",
  "embedded-graphics",
  "embedded-touch",

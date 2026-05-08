@@ -8,7 +8,7 @@
                 "check": {
                     "command": "clippy",
                     "features": "all",
-                    "workspace": true,
+                    "workspace": false,
                 },
                 "checkOnSave": true,
                 "linkedProjects": ["brain/Cargo.toml", "pico/Cargo.toml"],

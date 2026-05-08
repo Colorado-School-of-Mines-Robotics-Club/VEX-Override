@@ -13,7 +13,7 @@ use embedded_graphics_simulator::{
 	BinaryColorTheme, OutputSettings, SimulatorDisplay, Window, sdl2::Keycode,
 };
 
-use display::{BACKGROUND_COLOR, DEFAULT_COLOR, State, top_level_view};
+use display::{BACKGROUND_COLOR, DEFAULT_COLOR, state::State, top_level_view};
 
 fn main() {
 	let mut window = Window::new(
@@ -46,7 +46,8 @@ fn main() {
 	let mut app = App::new(state, BuoyantSize::new(480, 240), top_level_view);
 
 	loop {
-		app.set_time(app_start.elapsed());
+		let frame_start = Instant::now();
+		app.set_time(frame_start.duration_since(app_start));
 
 		window
 			.events()
@@ -75,7 +76,7 @@ fn main() {
 			// Clear for the next frame
 			target.clear(Rgb888::BLACK);
 		} else {
-			std::thread::sleep(Duration::from_micros(16667));
+			std::thread::sleep(Duration::from_micros(16667) - frame_start.elapsed());
 		}
 	}
 }

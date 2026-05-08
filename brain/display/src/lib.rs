@@ -1,15 +1,18 @@
-use std::{ops::Rem, sync::LazyLock};
+use std::sync::LazyLock;
 
-use autons::simple::Route;
 use buoyant::{
 	match_view,
 	view::{Text, View, padding::Padding, prelude::*},
 };
 use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
-use shrewnit::{Angle, AngularVelocity, Length, LinearVelocity};
-use strum::{EnumCount, FromRepr, IntoStaticStr, VariantArray};
+use strum::{EnumCount as _, VariantArray as _};
+
+use crate::state::{SelectedPage, State};
 
 pub mod pages;
+pub mod state;
+#[cfg(feature = "vexide")]
+pub mod vexide;
 
 pub const BACKGROUND_COLOR: Rgb888 = Rgb888::BLACK;
 pub const DEFAULT_COLOR: Rgb888 = Rgb888::WHITE;
@@ -18,36 +21,6 @@ static ROBOTO: LazyLock<rusttype::Font<'static>> = LazyLock::new(|| {
 	let bytes = include_bytes!("../static/roboto-latin-400-normal.subset.ttf");
 	rusttype::Font::try_from_bytes(bytes).unwrap()
 });
-
-#[derive(Copy, Clone, PartialEq, Eq, Default, EnumCount, FromRepr, VariantArray, IntoStaticStr)]
-pub enum SelectedPage {
-	#[default]
-	Autons,
-	Odometry,
-}
-
-#[derive(Clone, Default)]
-pub struct State<R, const N: usize> {
-	pub page: SelectedPage,
-	pub odometry: OdometryState,
-	pub autons: AutonsState<R, N>,
-}
-
-#[derive(Clone, Default)]
-pub struct OdometryState {
-	pub x: Length<f64>,
-	pub y: Length<f64>,
-	pub h: Angle<f64>,
-	pub vx: LinearVelocity<f64>,
-	pub vy: LinearVelocity<f64>,
-	pub vh: AngularVelocity<f64>,
-}
-
-#[derive(Clone, Default)]
-pub struct AutonsState<R, const N: usize> {
-	pub routes: Option<[Route<R>; N]>,
-	pub selection: usize,
-}
 
 pub fn page_selector<R, const N: usize>(
 	state: &State<R, N>,

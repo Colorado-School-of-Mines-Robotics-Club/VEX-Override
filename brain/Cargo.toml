@@ -11,6 +11,8 @@ shrewnit = { git = "https://github.com/Gavin-Niederman/shrewnit.git", rev = "736
 buoyant = { git = "https://github.com/riley-williams/buoyant", tag = "0.7.0" }
 embedded-graphics = "0.8.2"
 embedded-graphics-simulator = "0.8.0"
+vexide-embedded-graphics = { git = "https://github.com/vexide/vexide-embedded-graphics", rev = "a19c3577a4cffe0d161b6c346cc846e7f17422d0" }
+
 [patch.crates-io]
 # Patch vex-sdk to support latest nightly rust
 vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk", rev = "ff94966cf881ee98fbaba432ab5e9061d8d422f9" }

@@ -1,123 +1,72 @@
-use std::time::Instant;
+use std::time::Duration;
 
 use autons::route;
-use buoyant::{
-	app::{App, Harness},
-	event::Event,
-	primitives::Size,
-	render_target::{EmbeddedGraphicsRenderTarget, RenderTarget},
+use coprocessor::{
+	requests::{CalibrateRequest, GetPositionRequest, GetVelocityRequest},
+	vexide::CoprocessorSmartPort,
 };
-use display::{State, top_level_view};
-use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
-use embedded_touch::{Phase, Tool, Touch, TouchPoint};
+use display::{state::SelectedPage, vexide::RobotUi};
 use shrewnit::{Degrees, Inches};
 use vexide::{
-	display::{RenderMode, TouchEvent, TouchState},
 	prelude::{Display, Peripherals},
 	time::sleep,
 };
-use vexide_embedded_graphics::DisplayDriver;
-
-struct TouchStateHandler {
-	last: TouchEvent,
-	touch_id: u8,
-}
-
-impl TouchStateHandler {
-	fn new(event: TouchEvent) -> Self {
-		Self {
-			last: event,
-			touch_id: 0,
-		}
-	}
-
-	fn update(&mut self, event: TouchEvent) -> Option<Event> {
-		let buoyant_event = match event.state {
-			TouchState::Pressed if event.press_count > self.last.press_count => {
-				Some(Event::Touch(Touch {
-					id: self.touch_id,
-					location: TouchPoint::new(event.point.x, event.point.y),
-					phase: Phase::Started,
-					tool: Tool::Finger,
-				}))
-			}
-			TouchState::Held if event.point != self.last.point => Some(Event::Touch(Touch {
-				id: self.touch_id,
-				location: TouchPoint::new(event.point.x, event.point.y),
-				phase: Phase::Moved,
-				tool: Tool::Finger,
-			})),
-			TouchState::Released if event.release_count > self.last.release_count => {
-				let touch_id = self.touch_id;
-				self.touch_id = touch_id.wrapping_add(1);
-				Some(Event::Touch(Touch {
-					id: touch_id,
-					location: TouchPoint::new(event.point.x, event.point.y),
-					phase: Phase::Ended,
-					tool: Tool::Finger,
-				}))
-			}
-			_ => None,
-		};
-
-		self.last = event;
-
-		buoyant_event
-	}
-}
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-	let mut display_driver = DisplayDriver::new(peripherals.display);
-	let mut target = EmbeddedGraphicsRenderTarget::new_hinted(&mut display_driver, Rgb888::BLACK);
-	target
-		.display_mut()
-		.set_render_mode(RenderMode::DoubleBuffered);
+	let mut ui = RobotUi::new(peripherals.display);
+	let copro = CoprocessorSmartPort::new(peripherals.port_6).await;
 
-	let mut state = State::<(), 5>::default();
-	state.odometry.x = -65.0 * Inches;
-	state.odometry.y = 0.0 * Inches;
-	state.odometry.h = 90.0 * Degrees;
+	// Initialize state
+	{
+		// Link calibration callback
+		let state_clone = ui.state_clone(); // Gee I sure wish I had ergonomic ref counting right now
+		let copro_clone = copro.clone();
+		let calibration_cb = move || {
+			let state_clone = state_clone.clone();
+			let copro_clone = copro_clone.clone();
+			vexide::task::spawn(async move {
+				_ = copro_clone.send_request(CalibrateRequest).await;
+				state_clone.borrow_mut().odometry.calibrating = false;
+			})
+			.detach();
+		};
 
-	async fn callback(_: &mut ()) {
-		println!("hiiii");
+		let mut state = ui.state_mut();
+
+		state.odometry.register_calibration_callback(calibration_cb);
+
+		// Setup routes
+		async fn callback(_: &mut ()) {
+			println!("hiiii");
+		}
+		state.autons.routes = Some([
+			route!("Route 1", callback),
+			route!("Route 2", callback),
+			route!("Route 3", callback),
+			route!("Route 4", callback),
+			route!("Route 5", callback),
+		]);
+		state.page = SelectedPage::Odometry;
 	}
-	state.autons.routes = Some([
-		route!("Route 1", callback),
-		route!("Route 2", callback),
-		route!("Route 3", callback),
-		route!("Route 4", callback),
-		route!("Route 5", callback),
-	]);
 
-	let app_start = Instant::now();
-	let mut touch_state_handler = TouchStateHandler::new(target.display().touch_status());
-	let mut app = App::new(
-		state,
-		Size::new(
-			Display::HORIZONTAL_RESOLUTION as u32,
-			Display::VERTICAL_RESOLUTION as u32,
-		),
-		top_level_view,
-	);
-
+	// Periodically refresh position & velocity
 	loop {
-		app.set_time(app_start.elapsed());
+		if let Ok(position) = copro.send_request(GetPositionRequest).await {
+			let odometry = &mut ui.state_mut().odometry;
 
-		if let Some(e) = touch_state_handler.update(target.display().touch_status()) {
-			app.send(e);
+			odometry.x = position.x;
+			odometry.y = position.y;
+			odometry.h = position.heading;
 		}
+		sleep(Duration::from_millis(5)).await;
+		if let Ok(velocity) = copro.send_request(GetVelocityRequest).await {
+			let odometry = &mut ui.state_mut().odometry;
 
-		// Only render if active animation was reported or redraw is needed
-		if app.should_redraw() || target.clear_animation_status() {
-			// Render animated transition between source and target trees
-			app.render_animated(&mut target, &Rgb888::WHITE);
-
-			// Send to the display
-			target.display_mut().render();
-			target.clear(Rgb888::BLACK);
-		} else {
-			sleep(Display::REFRESH_INTERVAL).await;
+			odometry.vx = velocity.x;
+			odometry.vy = velocity.y;
+			odometry.vh = velocity.heading;
 		}
+		sleep(Duration::from_millis(5)).await;
 	}
 }

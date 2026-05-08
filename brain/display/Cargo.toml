@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-buoyant = { git = "https://github.com/riley-williams/buoyant", tag = "0.7.0", features = ["rusttype-fonts"] }
+buoyant = { workspace = true, features = ["rusttype-fonts"] }
 embedded-graphics = "0.8.2"
 rusttype = "0.9.3"
 strum = { version = "0.28.0", features = ["derive"] }
@@ -12,3 +12,11 @@ zune-jpeg = "0.5.15"
 zune-image = { version = "0.5.0", default-features = false }
 shrewnit.workspace = true
 autons.workspace = true
+# Vexide-specific
+vexide = { workspace = true, optional = true }
+vexide-embedded-graphics = { workspace = true, optional = true }
+embedded-touch = { version = "0.3.0", optional = true }
+
+[features]
+default = ["vexide"]
+vexide = ["dep:vexide", "dep:vexide-embedded-graphics", "embedded-touch"]

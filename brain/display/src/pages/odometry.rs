@@ -1,10 +1,14 @@
 use std::sync::LazyLock;
 
-use buoyant::view::{
-	HStack, Image, View, ZStack,
-	padding::Padding,
-	prelude::{Edges, ViewModifier},
-	shape::{Circle, RoundedRectangle},
+use buoyant::{
+	if_view,
+	layout::HorizontalAlignment,
+	view::{
+		Button, HStack, Image, Spacer, Text, VStack, View, ZStack,
+		padding::Padding,
+		prelude::{Edges, ViewModifier},
+		shape::{Circle, RoundedRectangle},
+	},
 };
 use embedded_graphics::{image::ImageRaw, pixelcolor::Rgb888, prelude::WebColors};
 use shrewnit::{Degrees, DegreesPerSecond, Inches, LinearVelocity, simple_unit};
@@ -68,6 +72,7 @@ static FIELD_IMAGE: LazyLock<ImageRaw<Rgb888>> =
 	LazyLock::new(|| ImageRaw::new(&*FIELD_IMAGE_BUF, 150));
 
 pub fn view<R, const N: usize>(state: &State<R, N>) -> impl View<Rgb888, State<R, N>> + use<R, N> {
+	let calibrating = state.odometry.calibrating;
 	Padding::new(
 		Edges::All,
 		10,
@@ -77,14 +82,41 @@ pub fn view<R, const N: usize>(state: &State<R, N>) -> impl View<Rgb888, State<R
 				Padding::new(
 					Edges::All,
 					10,
-					display_measurements!(state;
-						x: Inches => "in",
-						y: Inches => "in",
-						h: Degrees => "°",
-						vx: InchesPerSecond => "in/s",
-						vy: InchesPerSecond => "in/s",
-						vh: DegreesPerSecond => "°/s"
-					),
+					VStack::new((
+						display_measurements!(state;
+							x: Inches => "in",
+							y: Inches => "in",
+							h: Degrees => "°",
+							vx: InchesPerSecond => "in/s",
+							vy: InchesPerSecond => "in/s",
+							vh: DegreesPerSecond => "°/s"
+						),
+						Spacer::default(),
+						Button::new(
+							|state: &mut State<_, _>| {
+								if !state.odometry.calibrating {
+									state.odometry.calibrating = true;
+									(state.odometry.calibration_callback)();
+								}
+							},
+							move |_| {
+								let (color, text) = if calibrating {
+									(Rgb888::CSS_BLUE, "Calibrating...")
+								} else {
+									(Rgb888::CSS_GRAY, "Calibrate")
+								};
+								ZStack::new((
+									RoundedRectangle::new(5)
+										.foreground_color(color)
+										.flex_infinite_width(HorizontalAlignment::Center)
+										.with_max_height(40),
+									Text::new(text, &*ROBOTO)
+										.with_font_size(24)
+										.hint_background_color(color),
+								))
+							},
+						),
+					)),
 				),
 			)),
 			ZStack::new((
