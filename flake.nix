@@ -25,6 +25,12 @@
                 # Setup rust toolchain
                 rust-bin = rust-overlay.lib.mkRustBin { } pkgs;
                 rust' = (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml);
+                # winit
+                libPath = with pkgs; lib.makeLibraryPath [
+                    libGL
+                    libxkbcommon
+                    wayland
+                ];
             in
             {
                 # Provide a development environment with rust, cargo-v5, and the formatter
@@ -41,6 +47,13 @@
                         # Display development
                         SDL2 # Required by embedded-graphics-simulator
                         imagemagick
+                        # Simulator requirements
+                        pkg-config
+                        fontconfig
+                        clang
+                        llvmPackages.libclang
+                        glibc
+                        cmake
                         # Pico development
                         probe-rs-tools # Interfacing with pico probe
                         picotool       # Flashing over BOOTSEL
@@ -50,6 +63,11 @@
                         # PCB development
                         kicad
                     ]);
+
+                    env = {
+                        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+                        LD_LIBRARY_PATH = libPath;
+                    };
                 };
             }
         );

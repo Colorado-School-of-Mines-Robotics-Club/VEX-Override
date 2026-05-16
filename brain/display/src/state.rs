@@ -4,13 +4,16 @@ use autons::simple::Route;
 use shrewnit::{Angle, AngularVelocity, Length, LinearVelocity};
 use strum::{EnumCount, FromRepr, IntoStaticStr, VariantArray};
 
-#[derive(Copy, Clone, PartialEq, Eq, Default, EnumCount, FromRepr, VariantArray, IntoStaticStr)]
+#[derive(
+	Debug, Copy, Clone, PartialEq, Eq, Default, EnumCount, FromRepr, VariantArray, IntoStaticStr,
+)]
 pub enum SelectedPage {
 	#[default]
 	Autons,
 	Odometry,
 }
 
+#[derive(Debug)]
 pub struct State<R, const N: usize> {
 	pub page: SelectedPage,
 	pub odometry: OdometryState,
@@ -49,6 +52,22 @@ pub struct OdometryState {
 	pub vh: AngularVelocity<f64>,
 }
 
+// Rc<dyn Fn()> doesn't implement Debug, so this has to be done manually
+impl std::fmt::Debug for OdometryState {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("OdometryState")
+			.field("calibration_callback", &"Rc<dyn Fn()>")
+			.field("calibrating", &self.calibrating)
+			.field("x", &self.x)
+			.field("y", &self.y)
+			.field("h", &self.h)
+			.field("vx", &self.vx)
+			.field("vy", &self.vy)
+			.field("vh", &self.vh)
+			.finish()
+	}
+}
+
 impl OdometryState {
 	pub fn register_calibration_callback(&mut self, f: impl Fn() + 'static) {
 		self.calibration_callback = Rc::new(f);
@@ -70,6 +89,7 @@ impl Default for OdometryState {
 	}
 }
 
+#[derive(Debug)]
 pub struct AutonsState<R, const N: usize> {
 	pub routes: Option<[Route<R>; N]>,
 	pub selection: usize,

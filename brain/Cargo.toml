@@ -3,10 +3,10 @@ resolver = "3"
 members = ["coprocessor", "display", "display/simulator", "display/testing"]
 
 [workspace.dependencies]
-vexide = { version = "0.8.0", features = ["default-sdk", "full"] }
+vexide = { version = "0.8.0", features = ["full", "default-sdk"] }
 futures-lite = "2.6.1"
 autons = "0.2.0"
-shrewnit = { git = "https://github.com/Gavin-Niederman/shrewnit.git", rev = "73617f18d1faf79ffed097d1fc7ef0e1ae8663de" }
+shrewnit = { git = "https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit" }
 # Display
 buoyant = { git = "https://github.com/riley-williams/buoyant", tag = "0.7.0" }
 embedded-graphics = "0.8.2"
@@ -14,6 +14,5 @@ embedded-graphics-simulator = "0.8.0"
 vexide-embedded-graphics = { git = "https://github.com/vexide/vexide-embedded-graphics", rev = "a19c3577a4cffe0d161b6c346cc846e7f17422d0" }
 
 [patch.crates-io]
-# Patch vex-sdk to support latest nightly rust
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk", rev = "ff94966cf881ee98fbaba432ab5e9061d8d422f9" }
-vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk", rev = "ff94966cf881ee98fbaba432ab5e9061d8d422f9" }
+vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk" }
+vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk" }

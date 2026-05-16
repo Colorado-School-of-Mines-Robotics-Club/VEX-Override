@@ -1,7 +1,6 @@
 use std::sync::LazyLock;
 
 use buoyant::{
-	if_view,
 	layout::HorizontalAlignment,
 	view::{
 		Button, HStack, Image, Spacer, Text, VStack, View, ZStack,

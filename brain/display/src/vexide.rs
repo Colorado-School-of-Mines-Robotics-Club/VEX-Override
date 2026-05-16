@@ -17,7 +17,7 @@ use vexide::{
 	display::{RenderMode, TouchEvent, TouchState},
 	prelude::Display,
 	task::Task,
-	time::{sleep, sleep_until},
+	time::sleep_until,
 };
 use vexide_embedded_graphics::DisplayDriver;
 
@@ -69,6 +69,7 @@ impl TouchStateHandler {
 	}
 }
 
+#[derive(Debug)]
 pub struct TrackedState<R: 'static, const N: usize> {
 	inner: State<R, N>,
 	has_changed: bool,

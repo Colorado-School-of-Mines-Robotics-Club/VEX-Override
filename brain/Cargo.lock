@@ -601,9 +601,9 @@ checksum = "c6673768db2d862beb9b39a78fdcb1a69439615d5794a1be50caa9bc92c81967"
 
 [[package]]
 name = "num-traits"
-version = "0.2.16"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30b0abd723be7e2ffca1272140fac1a2f084c77ec3e123c192b66af1ee9e6c2"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
 ]
@@ -660,19 +660,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
-name = "pin-project"
-version = "1.1.12"
+name = "pastey"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf0d9e68100b3a7989b4901972f265cd542e560a3a8a724e1e20322f4d06ce9"
+checksum = "c5a797f0e07bdf071d15742978fc3128ec6c22891c31a3a931513263904c982a"
+
+[[package]]
+name = "pin-project"
+version = "1.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2466b2336ed02bcdca6b294417127b90ec92038d1d5c4fbeac971a922e0e0924"
 dependencies = [
  "pin-project-internal",
 ]
 
 [[package]]
 name = "pin-project-internal"
-version = "1.1.12"
+version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a990e22f43e84855daf260dded30524ef4a9021cc7541c26540500a50b624389"
+checksum = "c96395f0a926bc13b1c17622aaddda1ecb55d49c8f1bf9777e4d877800a43f8b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -851,10 +857,10 @@ dependencies = [
 [[package]]
 name = "shrewnit"
 version = "0.2.1"
-source = "git+https://github.com/Gavin-Niederman/shrewnit.git?rev=73617f18d1faf79ffed097d1fc7ef0e1ae8663de#73617f18d1faf79ffed097d1fc7ef0e1ae8663de"
+source = "git+https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit#f1f627c25149d8dd40c8cf3470648841de407d68"
 dependencies = [
  "num-traits",
- "paste",
+ "pastey",
 ]
 
 [[package]]
@@ -1073,22 +1079,22 @@ checksum = "b95fb7c2b31cb4a3e80b86ea47fc2abf21f8065dfd7d603657c44fb56d21b22d"
 [[package]]
 name = "vex-sdk"
 version = "0.28.0"
-source = "git+https://github.com/vexide/vex-sdk?rev=ff94966cf881ee98fbaba432ab5e9061d8d422f9#ff94966cf881ee98fbaba432ab5e9061d8d422f9"
+source = "git+https://github.com/vexide/vex-sdk#f08de5b8117c15985be5fa2812a53e1564cc992d"
 
 [[package]]
 name = "vex-sdk-jumptable"
 version = "0.1.1"
-source = "git+https://github.com/vexide/vex-sdk?rev=ff94966cf881ee98fbaba432ab5e9061d8d422f9#ff94966cf881ee98fbaba432ab5e9061d8d422f9"
+source = "git+https://github.com/vexide/vex-sdk#f08de5b8117c15985be5fa2812a53e1564cc992d"
 dependencies = [
- "vex-sdk 0.28.0 (git+https://github.com/vexide/vex-sdk?rev=ff94966cf881ee98fbaba432ab5e9061d8d422f9)",
+ "vex-sdk 0.28.0 (git+https://github.com/vexide/vex-sdk)",
 ]
 
 [[package]]
 name = "vex-sdk-mock"
 version = "0.1.0"
-source = "git+https://github.com/vexide/vex-sdk?rev=ff94966cf881ee98fbaba432ab5e9061d8d422f9#ff94966cf881ee98fbaba432ab5e9061d8d422f9"
+source = "git+https://github.com/vexide/vex-sdk#f08de5b8117c15985be5fa2812a53e1564cc992d"
 dependencies = [
- "vex-sdk 0.28.0 (git+https://github.com/vexide/vex-sdk?rev=ff94966cf881ee98fbaba432ab5e9061d8d422f9)",
+ "vex-sdk 0.28.0 (git+https://github.com/vexide/vex-sdk)",
 ]
 
 [[package]]

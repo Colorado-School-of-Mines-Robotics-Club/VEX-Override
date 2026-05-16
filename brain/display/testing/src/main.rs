@@ -6,11 +6,7 @@ use coprocessor::{
 	vexide::CoprocessorSmartPort,
 };
 use display::{state::SelectedPage, vexide::RobotUi};
-use shrewnit::{Degrees, Inches};
-use vexide::{
-	prelude::{Display, Peripherals},
-	time::sleep,
-};
+use vexide::{prelude::Peripherals, time::sleep};
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
