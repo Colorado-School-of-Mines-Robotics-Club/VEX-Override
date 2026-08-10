@@ -3,16 +3,13 @@ resolver = "3"
 members = ["coprocessor", "display", "display/simulator", "display/testing"]
 
 [workspace.dependencies]
-vexide = { version = "0.8.0", features = ["full", "default-sdk"] }
+vexide = { version = "0.9.0-alpha.1", features = ["full", "default-sdk"] }
 futures-lite = "2.6.1"
-autons = "0.2.0"
+# autons = "0.2.0"
+autons = { git = "https://github.com/TymanWasTaken/autons" }
 shrewnit = { git = "https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit" }
 # Display
-buoyant = { git = "https://github.com/riley-williams/buoyant", tag = "0.7.0" }
+buoyant = "0.7.0"
 embedded-graphics = "0.8.2"
 embedded-graphics-simulator = "0.8.0"
-vexide-embedded-graphics = { git = "https://github.com/vexide/vexide-embedded-graphics", rev = "a19c3577a4cffe0d161b6c346cc846e7f17422d0" }
-
-[patch.crates-io]
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk" }
-vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk" }
+vexide-embedded-graphics = { git = "https://github.com/TymanWasTaken/vexide-embedded-graphics" }
