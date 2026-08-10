@@ -1,5 +1,5 @@
-swerve_c++/swerve_half/firmware linguist-vendored
-swerve_c++/swerve_half/include/pros linguist-vendored
-swerve_c++/swerve_half/include/liblvgl linguist-vendored
+swerve_c++/swerve_half/firmware/** linguist-vendored
+swerve_c++/swerve_half/include/pros/** linguist-vendored
+swerve_c++/swerve_half/include/liblvgl/** linguist-vendored
 swerve_c++/swerve_half/include/api.h linguist-vendored
 swerve_c++/swerve_half/include/common.mk linguist-vendored
