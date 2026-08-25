@@ -30,6 +30,8 @@
                     libGL
                     libxkbcommon
                     wayland
+                    vulkan-loader
+                    vulkan-validation-layers
                 ];
             in
             {
@@ -42,6 +44,7 @@
                         # General rust development tools
                         evcxr
                         cargo-watch
+                        cargo-nextest
                         # Vex brain development
                         cargo-v5
                         # Display development
@@ -50,10 +53,11 @@
                         # Simulator requirements
                         pkg-config
                         fontconfig
+                        glibc
                         clang
                         llvmPackages.libclang
-                        glibc
                         cmake
+                        udev
                         # Pico development
                         probe-rs-tools # Interfacing with pico probe
                         picotool       # Flashing over BOOTSEL
@@ -67,6 +71,7 @@
                     env = {
                         LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
                         LD_LIBRARY_PATH = libPath;
+                        VULKAN_SDK = "${pkgs.vulkan-headers}";
                     };
                 };
             }

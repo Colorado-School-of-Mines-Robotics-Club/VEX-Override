@@ -1,4 +1,4 @@
-use crate::lidar::protocol::Request;
+use crate::protocol::Request;
 
 pub struct MotorSpeedCtrlRequest {
 	/// The angular speed of the motor in RPM to use for the LIDAR

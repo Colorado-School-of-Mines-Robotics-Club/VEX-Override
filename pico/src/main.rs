@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(split_array)]
 
-mod lidar;
 mod peripherals;
 mod pio;
 mod tasks;
