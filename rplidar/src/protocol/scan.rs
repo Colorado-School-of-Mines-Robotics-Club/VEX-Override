@@ -10,7 +10,7 @@ impl Request for ScanRequest {
 	const MAX_PAYLOAD_LENGTH: u8 = 0;
 }
 
-#[derive(Debug, Zeroable)]
+#[derive(Debug, Zeroable, Clone, Copy)]
 pub struct ScanResponse {
 	/// Whether this measurement is the start of a new scan
 	pub start: bool,

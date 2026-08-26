@@ -1,25 +1,23 @@
-#![feature(read_array)]
 use std::{
-	cell::RefCell,
 	collections::VecDeque,
-	io::Read as _,
 	sync::{Arc, LazyLock, Mutex},
 	thread::sleep,
 	time::Duration,
 };
 
-use bitter::LittleEndianReader;
 use nannou::prelude::*;
 use rplidar::protocol::{
 	Request, Response, ResponseDescriptor, ResponseMode, ResponseType,
 	get_info::{GetInfoRequest, GetInfoResponse},
+	reset::ResetRequest,
 	scan::{ScanRequest, ScanResponse},
-	stop::StopRequest,
 };
 
 struct Settings {
 	zoom: f32,
 	rotation: f32,
+	threshold: u8,
+	text_cache: String,
 }
 
 struct Model {
@@ -27,8 +25,14 @@ struct Model {
 	window: Entity,
 }
 
-static POINTS: LazyLock<Arc<Mutex<VecDeque<ScanResponse>>>> =
-	LazyLock::new(|| Arc::new(Mutex::new(VecDeque::with_capacity(500))));
+static POINTS: LazyLock<Arc<Mutex<VecDeque<(u16, ScanResponse)>>>> =
+	LazyLock::new(|| Arc::new(Mutex::new(VecDeque::with_capacity(520))));
+
+fn calculate_text(threshold: u8) -> String {
+	format!(
+		"Up/Down = Zoom in/out\nLeft/Right = Rotate\nX/Z = Increase/Decrease quality threshold ({threshold})\nLines every 2 ft (approx. 1 field tile)",
+	)
+}
 
 fn model(app: &App) -> Model {
 	let window = app.new_window().primary().view(view).build();
@@ -38,6 +42,8 @@ fn model(app: &App) -> Model {
 		settings: Settings {
 			zoom: 1.0,
 			rotation: 0.0,
+			threshold: 0,
+			text_cache: calculate_text(0),
 		},
 	}
 }
@@ -79,7 +85,12 @@ fn view(app: &App, model: &Model) {
 					.xy(Vec2::ZERO);
 			}
 
-			for point in points.iter().filter(|p| !p.distance.is_nan()) {
+			for point in points
+				.iter()
+				.map(|(_, p)| p)
+				.filter(|p| !p.distance.is_nan())
+				.filter(|p| p.quality > settings.threshold)
+			{
 				draw.ellipse()
 					.resolution(50.0)
 					.color(Srgba {
@@ -95,13 +106,11 @@ fn view(app: &App, model: &Model) {
 						* point.distance * mm_to_px);
 			}
 
-			draw.text(
-				"Up/Down = Zoom in/out\nLeft/Right = Rotate\nLines every 2 ft (approx. 1 field tile)",
-			)
-			.left_justify()
-			.align_text_top()
-			.xy(Vec2::ZERO)
-			.font_size(25);
+			draw.text(&settings.text_cache)
+				.left_justify()
+				.align_text_top()
+				.xy(Vec2::ZERO)
+				.font_size(25);
 
 			break;
 		}
@@ -112,12 +121,25 @@ fn view(app: &App, model: &Model) {
 fn update(app: &App, model: &mut Model) {
 	let settings = &mut model.settings;
 
+	for pressed in app.keys().get_pressed() {
+		match pressed {
+			KeyCode::ArrowUp => settings.zoom = (settings.zoom + 0.1).max(1.0),
+			KeyCode::ArrowDown => settings.zoom = (settings.zoom - 0.1).max(1.0),
+			KeyCode::ArrowLeft => settings.rotation -= 0.1,
+			KeyCode::ArrowRight => settings.rotation += 0.1,
+			_ => (),
+		}
+	}
 	for pressed in app.keys().get_just_pressed() {
 		match pressed {
-			KeyCode::ArrowUp => settings.zoom = (settings.zoom + 1.0).max(1.0),
-			KeyCode::ArrowDown => settings.zoom = (settings.zoom - 1.0).max(1.0),
-			KeyCode::ArrowLeft => settings.rotation -= 5.0,
-			KeyCode::ArrowRight => settings.rotation += 5.0,
+			KeyCode::KeyX => {
+				settings.threshold += 1;
+				settings.text_cache = calculate_text(settings.threshold);
+			}
+			KeyCode::KeyZ => {
+				settings.threshold -= 1;
+				settings.text_cache = calculate_text(settings.threshold);
+			}
 			_ => (),
 		}
 	}
@@ -129,6 +151,21 @@ fn main() {
 		.open()
 		.expect("Serial port failed to open");
 
+	// Reset the sensor
+	let mut buf = [0u8; ResetRequest::MAX_LENGTH];
+	let length = ResetRequest.serialize(&mut buf);
+	port.write_all(&buf[..length]).expect("Unable to send data");
+
+	sleep(Duration::from_millis(1000));
+	std::mem::drop(port);
+
+	// Reopen after reset
+	let mut port = serialport::new("/dev/ttyUSB0", 460_800)
+		.timeout(Duration::from_millis(1000))
+		.open()
+		.expect("Serial port failed to open");
+
+	// Get info about sensor
 	let mut buf = [0u8; GetInfoRequest::MAX_LENGTH];
 	let length = GetInfoRequest.serialize(&mut buf);
 	port.write_all(&buf[..length]).expect("Unable to send data");
@@ -163,17 +200,26 @@ fn main() {
 
 	std::thread::spawn(move || {
 		// Read measurement
+		let mut i = 0;
+		let mut last_start = 0;
 		loop {
 			if let Some(m) = ScanResponse::read_from::<5>(&mut port) {
 				loop {
 					if let Ok(mut p) = POINTS.try_lock() {
-						if p.len() == 500 {
+						p.push_back((i, m));
+
+						if m.start {
+							last_start = i;
+						}
+
+						if p.front().unwrap().0 != last_start {
 							p.pop_front();
 						}
-						p.push_back(m);
+
 						break;
 					}
 				}
+				i = i.wrapping_add(1);
 			}
 		}
 	});
