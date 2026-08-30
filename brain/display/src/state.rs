@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{collections::VecDeque, rc::Rc};
 
 use autons::simple::Route;
 use shrewnit::{Angle, AngularVelocity, Length, LinearVelocity};
@@ -18,6 +18,7 @@ pub struct State<R, const N: usize> {
 	pub page: SelectedPage,
 	pub odometry: OdometryState,
 	pub autons: AutonsState<R, N>,
+	pub lidar: LidarState,
 }
 
 impl<R, const N: usize> Default for State<R, N> {
@@ -26,6 +27,7 @@ impl<R, const N: usize> Default for State<R, N> {
 			page: Default::default(),
 			odometry: Default::default(),
 			autons: Default::default(),
+			lidar: Default::default(),
 		}
 	}
 }
@@ -36,6 +38,7 @@ impl<R, const N: usize> Clone for State<R, N> {
 			page: self.page,
 			odometry: self.odometry.clone(),
 			autons: self.autons.clone(),
+			lidar: self.lidar.clone(),
 		}
 	}
 }
@@ -111,4 +114,9 @@ impl<R, const N: usize> Clone for AutonsState<R, N> {
 			selection: self.selection,
 		}
 	}
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct LidarState {
+	pub measurements: VecDeque<(f32, f32)>,
 }

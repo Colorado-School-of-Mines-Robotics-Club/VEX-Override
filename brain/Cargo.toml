@@ -5,6 +5,7 @@ members = ["coprocessor", "display", "display/simulator", "display/testing"]
 [workspace.dependencies]
 vexide = { version = "0.9.0-alpha.1", features = ["full", "default-sdk"] }
 futures-lite = "2.6.1"
+bytemuck = { version = "1.25.0", default-features = false, features = ["derive", "min_const_generics", "must_cast"] }
 # autons = "0.2.0"
 autons = { git = "https://github.com/TymanWasTaken/autons" }
 shrewnit = { git = "https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit" }

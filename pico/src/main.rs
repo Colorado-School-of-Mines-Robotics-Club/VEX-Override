@@ -7,7 +7,9 @@ mod pio;
 mod tasks;
 mod utils;
 
-use crate::tasks::{blinker::blinker_task, brain::brain_rx, leds::leds_task, otos::otos_task};
+use crate::tasks::{
+	blinker::blinker_task, brain::brain_rx, leds::leds_task, lidar::lidar_task, otos::otos_task,
+};
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_rp::{
@@ -52,8 +54,9 @@ async fn main(spawner: Spawner) {
 		otos_task(p.otos),
 		brain_rx(p.brain_uart, p.brain_enable_pin),
 		leds_task(p.leds_sm, p.leds_dma),
-		secondary_bootsel(p.secondary_bootsel),
-		watchdog_task(p.watchdog, p.led2)
+		secondary_bootsel(p.button),
+		watchdog_task(p.watchdog, p.led2),
+		lidar_task(p.lidar_uart)
 	);
 	#[cfg(feature = "usb")]
 	spawn_tasks!(

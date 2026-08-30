@@ -1,5 +1,5 @@
 use bitter::LittleEndianReader;
-use defmt::{error, warn};
+use defmt::{error, info, warn};
 use embassy_rp::uart::{self, Uart};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::{Duration, Timer};
@@ -7,16 +7,22 @@ use embassy_time::{Duration, Timer};
 use rplidar::protocol::{
 	BUFFER_SIZE, Request as _, Response, ResponseDescriptor,
 	get_health::{GetHealthRequest, GetHealthResponse, HealthStatus},
+	reset::ResetRequest,
 	scan::{ScanRequest, ScanResponse},
 };
 
-const MEASUREMENT_COUNT: usize = (360.0 / 0.72) as usize; // Store one full rotation
-static LIDAR_MEASUREMENTS: Channel<CriticalSectionRawMutex, ScanResponse, MEASUREMENT_COUNT> =
+const MEASUREMENT_COUNT: usize = 520; // Approximately the highest amount before a new scan
+pub static LIDAR_MEASUREMENTS: Channel<CriticalSectionRawMutex, ScanResponse, MEASUREMENT_COUNT> =
 	Channel::new();
 
 #[embassy_executor::task]
 pub async fn lidar_task(mut uart: Uart<'static, uart::Async>) {
 	let mut buf = [0u8; BUFFER_SIZE];
+
+	// Reset lidar in case it was already running
+	let len = ResetRequest.serialize(&mut buf);
+	_ = uart.write(&buf[..len]).await;
+	Timer::after(Duration::from_millis(500)).await;
 
 	// Attempt to ping the LIDAR until it indicates healthy status
 	loop {
@@ -58,7 +64,9 @@ pub async fn lidar_task(mut uart: Uart<'static, uart::Async>) {
 
 		// Verify sensor healthy
 		match health.status {
-			HealthStatus::Good => (),
+			HealthStatus::Good => {
+				info!("LIDAR works!!!");
+			}
 			HealthStatus::Warning => {
 				warn!("LIDAR reported warning: erorr code {}", health.error_code)
 			}

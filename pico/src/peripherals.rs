@@ -2,7 +2,7 @@ use embassy_rp::{
 	Peripherals, bind_interrupts, dma,
 	gpio::{Input, Level, Output, Pull},
 	i2c::{self, I2c},
-	peripherals::{DMA_CH0, DMA_CH1, DMA_CH2, I2C0, PIN_2, PIN_10, PIO0, UART0, USB},
+	peripherals::*,
 	pio::{self, Pio, StateMachine},
 	uart::{self, DataBits, Parity, StopBits, Uart},
 	usb,
@@ -21,12 +21,22 @@ pub const BLINKER_STATE_MACHINE: usize = 0;
 pub type BlinkerPin = PIN_2;
 pub type LedsPIO = PIO0;
 pub const LEDS_STATE_MACHINE: usize = 1;
-pub type LedsPin = PIN_10;
+pub type LedsPin = PIN_6;
 pub type LedsDMA = DMA_CH2;
+pub type LidarUART = UART1;
+pub type LidarUARTTxDMA = DMA_CH3;
+pub type LidarUARTRxDMA = DMA_CH4;
 
+// Link interrupts to their proper handlers
 bind_interrupts!(pub struct Irq {
 	UART0_IRQ => uart::InterruptHandler<BrainUART>;
-	DMA_IRQ_0 => dma::InterruptHandler<BrainUARTTxDMA>, dma::InterruptHandler<BrainUARTRxDMA>, dma::InterruptHandler<LedsDMA>;
+	UART1_IRQ => uart::InterruptHandler<LidarUART>;
+	DMA_IRQ_0 =>
+		dma::InterruptHandler<BrainUARTTxDMA>,
+		dma::InterruptHandler<BrainUARTRxDMA>,
+		dma::InterruptHandler<LedsDMA>,
+		dma::InterruptHandler<LidarUARTTxDMA>,
+		dma::InterruptHandler<LidarUARTRxDMA>;
 	I2C0_IRQ => i2c::InterruptHandler<OtosI2C>;
 	PIO0_IRQ_0 => pio::InterruptHandler<BlinkerPIO>;
 	#[cfg(feature = "usb")]
@@ -34,17 +44,28 @@ bind_interrupts!(pub struct Irq {
 });
 
 pub struct CoproPeripherals<'a> {
+	/// USB for serial output (logging)
 	#[cfg(feature = "usb")]
 	pub usb: usb::Driver<'a, USB>,
+	/// Watchdog timer to detect and reset on stalls
 	pub watchdog: watchdog::Watchdog,
+	/// Bottom LED
 	pub led2: Output<'a>,
-	pub secondary_bootsel: Input<'a>,
+	/// SW2 button
+	pub button: Input<'a>,
+	/// OTOS over I2C
 	pub otos: I2c<'a, OtosI2C, i2c::Async>,
+	/// RS-485 tranciever UART
 	pub brain_uart: Uart<'a, uart::Async>,
+	/// RS-485 enable pin, High = Transmit, Low = Recieve
 	pub brain_enable_pin: Output<'a>,
+	/// PIO state machine for blinking an LED
 	pub blinker_sm: StateMachine<'a, BlinkerPIO, BLINKER_STATE_MACHINE>,
+	/// PIO state machine for controlling WS2812b RGB LEDs
 	pub leds_sm: StateMachine<'a, LedsPIO, LEDS_STATE_MACHINE>,
 	pub leds_dma: dma::Channel<'a>,
+	/// Lidar sensor UART
+	pub lidar_uart: Uart<'a, uart::Async>,
 }
 
 pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
@@ -60,7 +81,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 	setup_ws2812b_sm::<LedsPIO, LEDS_STATE_MACHINE, LedsPin>(
 		&mut pio0.common,
 		&mut leds_sm,
-		p.PIN_10,
+		p.PIN_6,
 		800_000,
 	); // 800Kbps
 
@@ -70,18 +91,28 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 		usb: usb::Driver::new(p.USB, Irq),
 		watchdog: Watchdog::new(p.WATCHDOG),
 		led2: Output::new(p.PIN_3, Level::Low),
-		secondary_bootsel: Input::new(p.PIN_17, Pull::Up),
+		button: Input::new(p.PIN_12, Pull::Up),
+		// secondary_bootsel: Input::new(p.PIN_17, Pull::Up),
 		otos: I2c::new_async(p.I2C0, p.PIN_9, p.PIN_8, Irq, {
 			// Use 1MBit/s speed for otos i2c
 			let mut cfg = i2c::Config::default();
 			cfg.frequency = 1_000_000;
 			cfg
 		}),
-		brain_enable_pin: Output::new(p.PIN_11, Level::Low),
-		brain_uart: Uart::new(p.UART0, p.PIN_12, p.PIN_13, Irq, p.DMA_CH0, p.DMA_CH1, {
+		brain_enable_pin: Output::new(p.PIN_14, Level::Low),
+		brain_uart: Uart::new(p.UART0, p.PIN_0, p.PIN_1, Irq, p.DMA_CH0, p.DMA_CH1, {
 			// 921600 8n1 UART for brain communication
 			let mut cfg = uart::Config::default();
 			cfg.baudrate = 921600;
+			cfg.data_bits = DataBits::DataBits8;
+			cfg.stop_bits = StopBits::STOP1;
+			cfg.parity = Parity::ParityNone;
+			cfg
+		}),
+		lidar_uart: Uart::new(p.UART1, p.PIN_4, p.PIN_5, Irq, p.DMA_CH3, p.DMA_CH4, {
+			// 921600 8n1 UART for brain communication
+			let mut cfg = uart::Config::default();
+			cfg.baudrate = 460800;
 			cfg.data_bits = DataBits::DataBits8;
 			cfg.stop_bits = StopBits::STOP1;
 			cfg.parity = Parity::ParityNone;

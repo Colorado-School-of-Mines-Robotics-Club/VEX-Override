@@ -7,7 +7,7 @@ use embassy_rp::{
 	i2c::{self, I2c},
 	peripherals::I2C0,
 };
-use embassy_sync::blocking_mutex::{CriticalSectionMutex, raw::CriticalSectionRawMutex};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 use embassy_time::{Duration, Ticker};
 use embedded_rpc::RpcService;
 
@@ -113,8 +113,7 @@ pub const READINGS_UPPER: u8 = ACCELERATION_STDDEV_H_H;
 
 type ReadingsBuffer = [u8; { READINGS_UPPER - READINGS_LOWER + 1 } as usize];
 
-pub static LATEST_READINGS: CriticalSectionMutex<ReadingsBuffer> =
-	CriticalSectionMutex::new([0; _]);
+pub static LATEST_READINGS: Signal<CriticalSectionRawMutex, ReadingsBuffer> = Signal::new();
 pub static SERVICE: RpcService<CriticalSectionRawMutex, OtosAction, Result<(), ()>> =
 	RpcService::new();
 
@@ -213,11 +212,7 @@ pub async fn otos_task(mut i2c: I2c<'static, I2C0, i2c::Async>) {
 			continue;
 		}
 
-		let cl = |r: &mut ReadingsBuffer| *r = buf;
-		// SAFETY: Calling lock_mut is completely safe, so long as it is not called within itself.
-		unsafe {
-			LATEST_READINGS.lock_mut(cl); // TODO: is dma worth it?
-		};
+		LATEST_READINGS.signal(buf);
 
 		ticker.next().await;
 	}

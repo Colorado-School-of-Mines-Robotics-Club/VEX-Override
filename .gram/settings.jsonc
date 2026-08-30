@@ -12,7 +12,11 @@
                     "allTargets": false,
                 },
                 "checkOnSave": true,
-                "linkedProjects": ["brain/Cargo.toml", "pico/Cargo.toml", "rplidar/Cargo.toml"],
+                "linkedProjects": [
+                    "brain/Cargo.toml",
+                    "pico/Cargo.toml",
+                    // "rplidar/Cargo.toml"
+                ],
             },
         },
     },

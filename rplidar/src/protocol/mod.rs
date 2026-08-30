@@ -22,7 +22,7 @@ const SINGLE_REQUEST_MULTIPLE_RESPONSE: u8 = 0x1;
 
 const SCAN_RESPONSE_DATA_TYPE: [u8; 2] = [0x40, 0x81];
 
-/// The recommended buffer size for doing I/O with the LIDAR. This is the maximum of the request and response sizes.
+/// The recommended buffer size for doing I/O with the LIDAR. This is the maximum of the non-variable request and response sizes.
 pub const BUFFER_SIZE: usize = 20;
 // Known request sizes are completely bounded, with a max of 5 for express scan
 pub const MAX_REQUEST_SIZE: usize = 5;
