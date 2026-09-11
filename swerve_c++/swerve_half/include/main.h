@@ -44,6 +44,9 @@
 #include "globles.h"
 #include <cmath>
 #include "swerve_drive.h"
+#include "pid.h"
+#include "intake.h"
+#include "lift.h"
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
