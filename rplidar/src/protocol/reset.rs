@@ -1,4 +1,4 @@
-use crate::lidar::protocol::Request;
+use crate::protocol::Request;
 
 pub struct ResetRequest;
 

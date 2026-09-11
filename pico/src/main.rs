@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(split_array)]
 
-mod lidar;
 mod peripherals;
 mod pio;
 mod tasks;
@@ -28,16 +27,14 @@ use defmt_rtt as _;
 use panic_probe as _;
 
 macro_rules! spawn_tasks {
-	($spawner:expr; $($(#[$attr:meta])* $fn:ident($($param:expr),*)),+) => {
+	($spawner:expr; $($fn:expr),+) => {
 		$(
-			$(#[$attr])* {
-				$spawner.spawn(unwrap!($fn($($param),*)));
-			}
+			$spawner.spawn(unwrap!($fn));
 		)+
     };
 }
 
-const CLOCK_SPEED: u32 = 150_000_000; // MHz
+const CLOCK_SPEED: u32 = 150 /* MHz */ * 1_000_000;
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -56,9 +53,13 @@ async fn main(spawner: Spawner) {
 		brain_rx(p.brain_uart, p.brain_enable_pin),
 		leds_task(p.leds_sm, p.leds_dma),
 		secondary_bootsel(p.secondary_bootsel),
-		watchdog_task(p.watchdog, p.led2),
-		#[cfg(feature = "usb")] defmt_usb(p.usb),
-		#[cfg(feature = "usb")] pinger()
+		watchdog_task(p.watchdog, p.led2)
+	);
+	#[cfg(feature = "usb")]
+	spawn_tasks!(
+		spawner;
+		defmt_usb(p.usb),
+		pinger()
 	);
 }
 

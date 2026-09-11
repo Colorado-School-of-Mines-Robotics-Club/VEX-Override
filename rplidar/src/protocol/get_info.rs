@@ -1,7 +1,8 @@
 use bitter::{BitReader as _, LittleEndianReader};
 
-use crate::lidar::protocol::{Request, Response};
+use crate::protocol::{Request, Response};
 
+#[derive(Debug)]
 pub struct GetInfoRequest;
 
 impl Request for GetInfoRequest {
@@ -9,6 +10,7 @@ impl Request for GetInfoRequest {
 	const MAX_PAYLOAD_LENGTH: u8 = 0;
 }
 
+#[derive(Debug)]
 pub struct GetInfoResponse {
 	/// The sub-model of the RPLIDAR
 	///
@@ -32,6 +34,46 @@ pub struct GetInfoResponse {
 	///
 	/// When converting to text in hex, the LSB prints first
 	pub serial_number: [u8; 16],
+}
+const C_MINIMUM_MAJOR_ID: u8 = 4;
+const S_MINIMUM_MAJOR_ID: u8 = 6;
+const T_MINIMUM_MAJOR_ID: u8 = 9;
+const M_MINIMUM_MAJOR_ID: u8 = 12;
+
+#[cfg(feature = "std")]
+impl std::fmt::Display for GetInfoResponse {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let major_model_category = match self.major_model {
+			..C_MINIMUM_MAJOR_ID => 'A',
+			C_MINIMUM_MAJOR_ID..S_MINIMUM_MAJOR_ID => 'C',
+			S_MINIMUM_MAJOR_ID..T_MINIMUM_MAJOR_ID => 'S',
+			T_MINIMUM_MAJOR_ID..M_MINIMUM_MAJOR_ID => 'T',
+			M_MINIMUM_MAJOR_ID.. => 'M',
+		};
+		let major_model_version = match major_model_category {
+			'A' => self.major_model,
+			'S' => self.major_model - S_MINIMUM_MAJOR_ID + 1,
+			'T' => self.major_model - T_MINIMUM_MAJOR_ID + 1,
+			'M' => self.major_model - M_MINIMUM_MAJOR_ID + 1,
+			'C' => self.major_model - C_MINIMUM_MAJOR_ID + 1,
+			_ => unreachable!(), // todo enum
+		};
+
+		f.write_fmt(format_args!(
+			"RPLIDAR {}{}M{}, firmware v{}.{}, hardware v{}, serial ",
+			major_model_category,
+			major_model_version,
+			self.sub_model,
+			self.firmware_major,
+			self.firmware_minor,
+			self.hardware,
+		))?;
+		for byte in self.serial_number {
+			f.write_fmt(format_args!("{:X}", byte))?;
+		}
+
+		Ok(())
+	}
 }
 
 impl Response for GetInfoResponse {

@@ -1,7 +1,7 @@
 use bitter::{BitReader as _, LittleEndianReader};
 use bytemuck::Contiguous;
 
-use crate::lidar::protocol::{Request, Response};
+use crate::protocol::{Request, Response};
 
 pub struct GetHealthRequest;
 
@@ -11,13 +11,14 @@ impl Request for GetHealthRequest {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Contiguous)]
+#[derive(Debug, Clone, Copy, Contiguous)]
 pub enum HealthStatus {
 	Good = 0x00,
 	Warning = 0x01,
 	Error = 0x02,
 }
 
+#[derive(Debug)]
 pub struct GetHealthResponse {
 	pub status: HealthStatus,
 	pub error_code: u16,

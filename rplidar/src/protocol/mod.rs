@@ -35,6 +35,16 @@ where
 	Self: Sized,
 {
 	fn parse(reader: &mut LittleEndianReader) -> Option<Self>;
+
+	/// A helper function to simplify reading a static length from a reader and parsing it
+	///
+	/// This can and should be used with almost all packets, as only one (at least for the c1) sends variable length responses
+	#[cfg(feature = "std")]
+	fn read_from<const LENGTH: usize>(mut reader: impl std::io::Read) -> Option<Self> {
+		let mut buf = [0u8; LENGTH];
+		reader.read_exact(&mut buf).ok()?;
+		Self::parse(&mut LittleEndianReader::new(&buf))
+	}
 }
 
 pub trait Request {
@@ -103,11 +113,13 @@ pub trait Request {
 	}
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ResponseMode {
 	SingleResponse,
 	MultipleResponse,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ResponseType {
 	Scan,
 	GetInfo,
@@ -116,6 +128,7 @@ pub enum ResponseType {
 	GetLidarConf,
 }
 
+#[derive(Debug)]
 pub struct ResponseDescriptor {
 	pub length: usize,
 	pub mode: ResponseMode,

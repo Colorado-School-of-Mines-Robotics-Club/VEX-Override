@@ -1,0 +1,18 @@
+[package]
+name = "rplidar"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Used for parsing RPLIDAR responses
+bitter = { version = "0.9.0", default-features = false }
+# Efficient and safe struct casting
+bytemuck = { version = "1.25.0", default-features = false, features = ["derive", "min_const_generics", "must_cast"] }
+
+[dev-dependencies]
+nannou = { version = "0.20.0" }
+serialport = "4.9.0"
+
+[features]
+default = ["std"]
+std = []

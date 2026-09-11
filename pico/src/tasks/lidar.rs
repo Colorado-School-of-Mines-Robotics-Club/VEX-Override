@@ -4,7 +4,7 @@ use embassy_rp::uart::{self, Uart};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::{Duration, Timer};
 
-use crate::lidar::protocol::{
+use rplidar::protocol::{
 	BUFFER_SIZE, Request as _, Response, ResponseDescriptor,
 	get_health::{GetHealthRequest, GetHealthResponse, HealthStatus},
 	scan::{ScanRequest, ScanResponse},

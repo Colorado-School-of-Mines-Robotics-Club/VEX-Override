@@ -1,6 +1,6 @@
 use bitter::{BitReader as _, LittleEndianReader};
 
-use crate::lidar::protocol::{Request, Response};
+use crate::protocol::{Request, Response};
 
 pub struct GetSampleRateRequest;
 

@@ -1,0 +1,19 @@
+{
+    "lsp": {
+        "rust-analyzer": {
+            "initialization_options": {
+                "cargo": {
+                    "allTargets": false,
+                },
+                "check": {
+                    "command": "clippy",
+                    "features": "all",
+                    "workspace": false,
+                    "allTargets": false,
+                },
+                "checkOnSave": true,
+                "linkedProjects": ["brain/Cargo.toml", "pico/Cargo.toml", "rplidar/Cargo.toml"],
+            },
+        },
+    },
+}

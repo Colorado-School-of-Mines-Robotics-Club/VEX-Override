@@ -1,7 +1,7 @@
 use bitter::{BitReader as _, LittleEndianReader};
 use bytemuck::Zeroable;
 
-use crate::lidar::protocol::{Request, Response};
+use crate::protocol::{Request, Response};
 
 pub struct ScanRequest;
 
@@ -10,7 +10,7 @@ impl Request for ScanRequest {
 	const MAX_PAYLOAD_LENGTH: u8 = 0;
 }
 
-#[derive(Zeroable)]
+#[derive(Debug, Zeroable)]
 pub struct ScanResponse {
 	/// Whether this measurement is the start of a new scan
 	pub start: bool,
@@ -22,12 +22,22 @@ pub struct ScanResponse {
 	pub distance: f32,
 }
 
+#[cfg(feature = "std")]
+impl std::fmt::Display for ScanResponse {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_fmt(format_args!(
+			"({} deg, {} m, {} quality)",
+			self.angle, self.distance, self.quality
+		))
+	}
+}
+
 impl Response for ScanResponse {
 	fn parse(reader: &mut LittleEndianReader) -> Option<Self> {
 		// Get start flag
 		let start = reader.read_bit()?;
 		// Ensure inverse start flag is correct, or fail early
-		if reader.read_bit()? != start {
+		if reader.read_bit()? == start {
 			return None;
 		};
 
