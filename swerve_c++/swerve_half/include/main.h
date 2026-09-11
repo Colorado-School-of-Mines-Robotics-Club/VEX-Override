@@ -43,8 +43,7 @@
 #include "pros/motors.h"
 #include "globles.h"
 #include <cmath>
-#include "drive.h"
-#include "class_drive.h"
+#include "swerve_drive.h"
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
