@@ -33,10 +33,11 @@ private:
     pros::adi::AnalogIn* rotb;
     pros::adi::AnalogIn* rotc;
     pros::adi::AnalogIn* rotd;
-    double b0 = 2320;
-    double a0 = 3280;
-    double c0 = 3280;
-    double d0 = 2320;
+    double initial_heading = 0.0;
+    double a0 = 3995+1024-4096;
+    double b0 = 910;
+    double c0 = 2052+4096-2048;
+    double d0 = 2988+1024-4096;
     std::vector<double> wanted = {0, 0, 0}; // angle x want y want
     swerve_module mod1;
     swerve_module mod2;
@@ -44,7 +45,15 @@ private:
     swerve_module mod4;
 public:
     Drive();
-    Drive(pros::Motor& m1, pros::Motor& m2, pros::Motor& m3, pros::Motor& m4, pros::Motor& m5, pros::Motor& m6, pros::Motor& m7, pros::Motor& m8, pros::Imu& imu_in, pros::adi::AnalogIn& rota_in, pros::adi::AnalogIn& rotb_in, pros::adi::AnalogIn& rotc_in, pros::adi::AnalogIn& rotd_in);
+    Drive(pros::Motor& top_left_m1, pros::Motor& top_left_m2,
+          pros::Motor& top_right_m1, pros::Motor& top_right_m2,
+          pros::Motor& bottom_left_m1, pros::Motor& bottom_left_m2,
+          pros::Motor& bottom_right_m1, pros::Motor& bottom_right_m2,
+          pros::Imu& imu_in,
+          pros::adi::AnalogIn& top_left_encoder,
+          pros::adi::AnalogIn& top_right_encoder,
+          pros::adi::AnalogIn& bottom_left_encoder,
+          pros::adi::AnalogIn& bottom_right_encoder);
     void update();
     void set_veter(std::vector<double> new_wanted);
     void set_double(double angle, double speed, double turn);

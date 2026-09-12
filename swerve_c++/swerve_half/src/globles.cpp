@@ -25,6 +25,9 @@ pros::adi::AnalogIn rota('E');
 pros::adi::AnalogIn rotb('F');
 pros::adi::AnalogIn rotc('H');
 pros::adi::AnalogIn rotd('G');
+pros::adi::AnalogIn rotchain('C');
+
+pros::adi::DigitalIn licence_plate('D');
 
 pros::adi::DigitalOut phematicks_a('A');
 pros::adi::DigitalOut phematicks_b('B');

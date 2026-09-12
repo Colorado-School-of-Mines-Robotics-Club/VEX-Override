@@ -19,14 +19,14 @@ Lift::Lift(){
     duo_pid = nullptr;
 }
 
-Lift::Lift(pros::Motor* DR4B_R_in, pros::Motor* DR4B_L_in, pros::Motor* Chain_bar_in, pros::Motor* Duo_bar_in, pros::adi::DigitalIn* phematicks_a_in, pros::adi::DigitalIn* phematicks_b_in, pros::adi::AnalogIn* rotchain_in){
-    DR4B_R = DR4B_R_in;
-    DR4B_L = DR4B_L_in;
-    Chain_bar = Chain_bar_in;
-    Duo_bar = Duo_bar_in;
-    phematicks_a = phematicks_a_in;
-    phematicks_b = phematicks_b_in;
-    rotchain = rotchain_in;
+Lift::Lift(pros::Motor& DR4B_R_in, pros::Motor& DR4B_L_in, pros::Motor& Chain_bar_in, pros::Motor& Duo_bar_in, pros::adi::DigitalOut& phematicks_a_in, pros::adi::DigitalOut& phematicks_b_in, pros::adi::AnalogIn& rotchain_in){
+    DR4B_R = &DR4B_R_in;
+    DR4B_L = &DR4B_L_in;
+    Chain_bar = &Chain_bar_in;
+    Duo_bar = &Duo_bar_in;
+    phematicks_a = &phematicks_a_in;
+    phematicks_b = &phematicks_b_in;
+    rotchain = &rotchain_in;
     state = 0;
     wanted_height = 0;
     pin = 0;
@@ -88,6 +88,8 @@ bool Lift::initalise(){
     DR4B_R->move_velocity(-50);
     DR4B_L->move_velocity(-50);
 
+    delay(2000);
+
     while(DR4B_L->get_actual_velocity()+DR4B_R->get_actual_velocity() > 0){
         pros::delay(10);
     }
@@ -104,7 +106,10 @@ bool Lift::initalise(){
 
     delay(50);
 
-    Duo_bar->move_velocity(-50);
+    Duo_bar->move_velocity(50);
+
+    delay(2000);
+
     while(Duo_bar->get_actual_velocity() > 0){
         pros::delay(10);
     }

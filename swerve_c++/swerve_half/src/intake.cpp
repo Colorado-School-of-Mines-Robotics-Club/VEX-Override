@@ -2,21 +2,21 @@
 #include "intake.h"
 using namespace pros;
 
-intake::intake(){
+Intake::Intake(){
     bottoma = nullptr;
     bottomb = nullptr;
     top = nullptr;
     state = 0;
 }
 
-intake::intake(pros::Motor* top_in, pros::Motor* bottoma_in, pros::Motor* bottomb_in){
-    bottoma = bottoma_in;
-    bottomb = bottomb_in;
-    top = top_in;
+Intake::Intake(pros::Motor& top_in, pros::Motor& bottoma_in, pros::Motor& bottomb_in){
+    bottoma = &bottoma_in;
+    bottomb = &bottomb_in;
+    top = &top_in;
     state = 0;
 }
 
-void intake::update(){
+void Intake::update(){
     switch (state){
         case 0:
             bottoma->move(0);
@@ -36,6 +36,10 @@ void intake::update(){
     }
 }
 
-void intake::set_state(int new_state){
+void Intake::set_state(int new_state){
     state = new_state;
+}
+
+bool Intake::initalise(){
+    return (true);
 }

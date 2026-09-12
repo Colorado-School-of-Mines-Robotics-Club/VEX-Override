@@ -55,9 +55,6 @@ void swerve_module::update(double heading) {
         actual_speed = wanted_speed;
     }
 
-
-
-
     motora->move(actual_speed + turn_error);
     motorb->move(-actual_speed + turn_error);
 
@@ -91,37 +88,49 @@ Drive::Drive(){
     mod2=swerve_module();
 }
 
-Drive::Drive(pros::v5::Motor& m1, pros::v5::Motor& m2, pros::v5::Motor& m3, pros::v5::Motor& m4, pros::v5::Motor& m5, pros::v5::Motor& m6, pros::v5::Motor& m7, pros::v5::Motor& m8, pros::Imu& imu_in, pros::adi::AnalogIn& rota_in, pros::adi::AnalogIn& rotb_in, pros::adi::AnalogIn& rotc_in, pros::adi::AnalogIn& rotd_in){
-        motora1 = &m1;
-        motora2 = &m2;
-        motorb1 = &m3;
-        motorb2 = &m4;
-        motorc1 = &m5;
-        motorc2 = &m6;
-        motord1 = &m7;
-        motord2 = &m8;
+Drive::Drive(pros::v5::Motor& top_left_m1, pros::v5::Motor& top_left_m2,
+             pros::v5::Motor& top_right_m1, pros::v5::Motor& top_right_m2,
+             pros::v5::Motor& bottom_left_m1, pros::v5::Motor& bottom_left_m2,
+             pros::v5::Motor& bottom_right_m1, pros::v5::Motor& bottom_right_m2,
+             pros::Imu& imu_in,
+             pros::adi::AnalogIn& top_left_encoder,
+             pros::adi::AnalogIn& top_right_encoder,
+             pros::adi::AnalogIn& bottom_left_encoder,
+             pros::adi::AnalogIn& bottom_right_encoder)
+{
+        motora1 = &top_left_m1;
+        motora2 = &top_left_m2;
+        motorb1 = &top_right_m1;
+        motorb2 = &top_right_m2;
+        motorc1 = &bottom_left_m1;
+        motorc2 = &bottom_left_m2;
+        motord1 = &bottom_right_m1;
+        motord2 = &bottom_right_m2;
         imu = &imu_in;
-        rota = &rota_in;
-        rotb = &rotb_in;
-        rotc = &rotc_in;
-        rotd = &rotd_in;
+        rota = &top_left_encoder;
+        rotb = &top_right_encoder;
+        rotc = &bottom_left_encoder;
+        rotd = &bottom_right_encoder;
+        initial_heading = imu_in.get_heading();
         mod1=swerve_module( motora1, motora2, rota, imu, a0, 1);
         mod2=swerve_module(motorb1, motorb2, rotb, imu, b0, 2);
-        mod1=swerve_module( motorc1, motorc2, rotc, imu, c0, 3);
-        mod2=swerve_module(motord1, motord2, rotd, imu, d0, 4);
+        mod3=swerve_module( motorc1, motorc2, rotc, imu, c0, 3);
+        mod4=swerve_module(motord1, motord2, rotd, imu, d0, 4);
+        printf("flag c");
     }
 
-    void Drive::update() {
-        double heading = imu->get_heading();
-        mod1.update(heading);
-        mod2.update(heading);
-        mod3.update(heading);
-        mod4.update(heading);
-    }
+void Drive::update() {
+    double heading = imu->get_heading();
+    mod1.update(heading);
+    mod2.update(heading);
+    mod3.update(heading);
+    mod4.update(heading);
+    printf("flag b");
+}
 
-    void Drive::set_veter(std::vector<double> new_wanted) {
-        wanted = new_wanted;
-    }
+void Drive::set_veter(std::vector<double> new_wanted) {
+    wanted = new_wanted;
+}
 
 void Drive::set_double(double angle, double speed, double turn) {
 
@@ -140,7 +149,27 @@ void Drive::set_double(double angle, double speed, double turn) {
     
 }
 
-void Drive::set_absolute(double tx, double ty, double turn) {
+void Drive::set_absolute(double ty, double tx, double turn) {
+
+    printf("flag a");
+
+    if (imu != nullptr) {
+        double heading_delta = -imu->get_heading() - initial_heading;
+        while (heading_delta > 180.0) heading_delta -= 360.0;
+        while (heading_delta < -180.0) heading_delta += 360.0;
+
+        double heading_rad = heading_delta * M_PI / 180.0;
+        double cos_theta = cos(heading_rad);
+        double sin_theta = sin(heading_rad);
+
+        // Rotate the joystick vector back into the original field frame whose X
+        // axis is the heading at the moment the Drive object was constructed.
+        double tx_world = tx * cos_theta - ty * sin_theta;
+        double ty_world = tx * sin_theta + ty * cos_theta;
+
+        tx = tx_world;
+        ty = ty_world;
+    }
 
     // Half the distance between the modules
     double L = 8.05/2;
@@ -150,10 +179,11 @@ void Drive::set_absolute(double tx, double ty, double turn) {
     double y[4] = { W, W, -W, -W};
 
     for (int i = 0; i < 4; i++) {
+        double turn_flip = (i == 1 || i == 2) ? -1.0 : 1.0;
 
         // Rotational velocity at this module
-        double vx = tx - turn * y[i];
-        double vy = ty + turn * x[i];
+        double vx = tx - turn_flip * turn * y[i];
+        double vy = ty + turn_flip * turn * x[i];
 
         // Resulting wheel velocity
         double power = sqrt(vx * vx + vy * vy);
@@ -185,4 +215,5 @@ void Drive::set_absolute(double tx, double ty, double turn) {
                 break;
         }
     }
+    printf("flag e");
 }

@@ -23,6 +23,9 @@ extern pros::adi::AnalogIn rota;
 extern pros::adi::AnalogIn rotb;
 extern pros::adi::AnalogIn rotc;
 extern pros::adi::AnalogIn rotd;
+extern pros::adi::AnalogIn rotchain;
+
+extern pros::adi::DigitalIn licence_plate;
 
 extern pros::Imu imu;
 

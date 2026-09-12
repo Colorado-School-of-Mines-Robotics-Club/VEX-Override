@@ -8,8 +8,8 @@ private:
     pros::Motor* DR4B_L;
     pros::Motor* Chain_bar;
     pros::Motor* Duo_bar;
-    pros::adi::DigitalIn* phematicks_a;
-    pros::adi::DigitalIn* phematicks_b;
+    pros::adi::DigitalOut* phematicks_a;
+    pros::adi::DigitalOut* phematicks_b;
     pros::adi::AnalogIn* rotchain;
     int state;
     int wanted_height;
@@ -24,7 +24,7 @@ private:
 
 public:
     Lift();
-    Lift(pros::Motor* DR4B_R, pros::Motor* DR4B_L, pros::Motor* Chain_bar, pros::Motor* Duo_bar, pros::adi::DigitalIn* phematicks_a, pros::adi::DigitalIn* phematicks_b, pros::adi::AnalogIn* rotchain);
+    Lift(pros::Motor& DR4B_R, pros::Motor& DR4B_L, pros::Motor& Chain_bar, pros::Motor& Duo_bar, pros::adi::DigitalOut& phematicks_a, pros::adi::DigitalOut& phematicks_b, pros::adi::AnalogIn& rotchain);
     void update();
     bool initalise();
     void set_state(int new_state);

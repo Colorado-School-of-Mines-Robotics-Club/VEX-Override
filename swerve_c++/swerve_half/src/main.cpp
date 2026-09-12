@@ -1,6 +1,8 @@
 #include "main.h"
 #include "pros/misc.h"
 
+
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -11,15 +13,7 @@ void initialize() {
 
 	printf("Hello person or thing!\n");
 
-	imu.reset();
-	int time = pros::millis();
-	int iter = 0;
-	while (imu.is_calibrating()) {
-		printf("IMU calibrating... %d\n", iter);
-		iter += 10;
-		pros::delay(10);
-	}
-	printf("IMU is done calibrating (took %d ms)\n", iter - time);
+
 
 	printf("Initialization complete!\n");
 }
@@ -78,15 +72,40 @@ void autonomous() {
 void opcontrol() {
 	printf("Driver started!\n");
 	
-	Drive drive(swerve_a1, swerve_a2, swerve_b1, swerve_b2, swerve_c1, swerve_c2, swerve_d1, swerve_d2, imu, rota, rotb, rotc, rotd);
-	
-	pros::delay(5000); // imu calabration
+	imu.reset();
+	int time = pros::millis();
+	int iter = 0;
+	while (imu.is_calibrating()) {
+		iter += 10;
+		pros::delay(10);
+	}
+	printf("IMU is done calibrating (took %d ms)\n", iter - time);
+
+	Drive drive(swerve_c1, swerve_c2, swerve_b1, swerve_b2, swerve_d1, swerve_d2, swerve_a1, swerve_a2, imu, rotc, rotb, rotd, rota);
+
+	Intake larry(Top_intake, Bottom_intake_a, Bottom_intake_b);
+
+	Lift bill_nye_the_lifter_guy(DR4B_R, DR4B_L, Chain_bar, Duo_bar, phematicks_a, phematicks_b, rotchain);
+
+	printf("Drive initialized!\n");
+
+	larry.initalise();
+
+	printf("Intake initialized!\n");
+
+	bool hi = bill_nye_the_lifter_guy.initalise();
+
+	delay(2000);
+
+	printf("Lift initialized!\n");
+
+	printf("flag h");
 
 	while (true)
 	{
 		double turn_power = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 		double deltax = -master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-		double deltay = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+		double deltay = -master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
 
 		//double wanted_angle = atan2(deltay, deltax)*180/M_PI-90;
 		//if (wanted_angle < 0){wanted_angle += 360;}
@@ -97,6 +116,16 @@ void opcontrol() {
 		//	wanted_speed = -1;}
 		//printf("wanted_angle: %f, wanted_speed: %f turn_power: %f\n", wanted_angle, wanted_speed, turn_power);
 		//drive.set_double(wanted_angle, wanted_speed, turn_power);
+
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+			larry.set_state(1);
+		} else {
+			larry.set_state(2);
+		}
+
+		larry.update();
+
+		printf("flag d");
 
 		drive.set_absolute(deltax, deltay, turn_power);
 		drive.update();
