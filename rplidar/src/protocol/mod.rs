@@ -1,4 +1,5 @@
 //! Reference: https://bucket-download.slamtec.com/c5971f2703a8d014f3925694d798ea490a370efa/LR001_SLAMTEC_rplidar_S&C%20series_protocol_v2.8_en.pdf
+
 use bitter::{BitReader, LittleEndianReader};
 
 // TODO:
@@ -22,7 +23,7 @@ const SINGLE_REQUEST_MULTIPLE_RESPONSE: u8 = 0x1;
 
 const SCAN_RESPONSE_DATA_TYPE: [u8; 2] = [0x40, 0x81];
 
-/// The recommended buffer size for doing I/O with the LIDAR. This is the maximum of the request and response sizes.
+/// The recommended buffer size for doing I/O with the LIDAR. This is the maximum of the non-variable request and response sizes.
 pub const BUFFER_SIZE: usize = 20;
 // Known request sizes are completely bounded, with a max of 5 for express scan
 pub const MAX_REQUEST_SIZE: usize = 5;
@@ -30,19 +31,34 @@ pub const MAX_REQUEST_SIZE: usize = 5;
 // The maximum bounded response (including descriptor) would be GetInfoRequest with 20 bytes
 pub const MAX_RESPONSE_SIZE: usize = 20;
 
+/// An enum representing the state of a parser.
+///
+/// States:
+/// 1. Unfinished - So far so good, but needs more data
+/// 2. Invalid - An error was encountered, this doesn't look like valid data
+/// 3. Done - Finished parsing successfully
+pub enum ParsingState<T> {
+	// TODO: Add min bytes read for optimization
+	Unfinished,
+	Invalid,
+	Done(T),
+}
+
 pub trait Response
 where
 	Self: Sized,
 {
-	fn parse(reader: &mut LittleEndianReader) -> Option<Self>;
+	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self>;
 
 	/// A helper function to simplify reading a static length from a reader and parsing it
 	///
 	/// This can and should be used with almost all packets, as only one (at least for the c1) sends variable length responses
 	#[cfg(feature = "std")]
-	fn read_from<const LENGTH: usize>(mut reader: impl std::io::Read) -> Option<Self> {
+	fn read_from<const LENGTH: usize>(mut reader: impl std::io::Read) -> ParsingState<Self> {
 		let mut buf = [0u8; LENGTH];
-		reader.read_exact(&mut buf).ok()?;
+		if let Err(_) = reader.read_exact(&mut buf) {
+			return ParsingState::Unfinished;
+		}
 		Self::parse(&mut LittleEndianReader::new(&buf))
 	}
 }
@@ -113,13 +129,13 @@ pub trait Request {
 	}
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, defmt::Format)]
 pub enum ResponseMode {
 	SingleResponse,
 	MultipleResponse,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, defmt::Format)]
 pub enum ResponseType {
 	Scan,
 	GetInfo,
@@ -128,7 +144,7 @@ pub enum ResponseType {
 	GetLidarConf,
 }
 
-#[derive(Debug)]
+#[derive(Debug, defmt::Format)]
 pub struct ResponseDescriptor {
 	pub length: usize,
 	pub mode: ResponseMode,
@@ -140,24 +156,34 @@ impl ResponseDescriptor {
 }
 
 impl Response for ResponseDescriptor {
-	fn parse(reader: &mut LittleEndianReader) -> Option<Self> {
-		if reader.read_u16()? != const { u16::from_le_bytes(RESPONSE_DESCRIPTOR_TAG) } {
-			return None;
+	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
+		let Some(tag) = reader.read_u16() else {
+			return ParsingState::Unfinished;
 		};
-		Some(Self {
-			length: reader.read_bits(30)? as usize,
-			mode: match reader.read_bits(2)? {
-				0x0 => ResponseMode::SingleResponse,
-				0x1 => ResponseMode::MultipleResponse,
-				_ => return None,
+		if tag != const { u16::from_le_bytes(RESPONSE_DESCRIPTOR_TAG) } {
+			return ParsingState::Invalid;
+		};
+
+		let Some(length) = reader.read_bits(30).map(|v| v as usize) else {
+			return ParsingState::Unfinished;
+		};
+
+		ParsingState::Done(Self {
+			length,
+			mode: match reader.read_bits(2) {
+				Some(0x0) => ResponseMode::SingleResponse,
+				Some(0x1) => ResponseMode::MultipleResponse,
+				Some(_) => return ParsingState::Invalid,
+				None => return ParsingState::Unfinished,
 			},
-			response_type: match reader.read_u8()? {
-				0x81 => ResponseType::Scan,
-				0x04 => ResponseType::GetInfo,
-				0x06 => ResponseType::GetHealth,
-				0x15 => ResponseType::GetSampleRate,
-				0x20 => ResponseType::GetLidarConf,
-				_ => return None,
+			response_type: match reader.read_u8() {
+				Some(0x81) => ResponseType::Scan,
+				Some(0x04) => ResponseType::GetInfo,
+				Some(0x06) => ResponseType::GetHealth,
+				Some(0x15) => ResponseType::GetSampleRate,
+				Some(0x20) => ResponseType::GetLidarConf,
+				Some(_) => return ParsingState::Invalid,
+				None => return ParsingState::Unfinished,
 			},
 		})
 	}

@@ -1,7 +1,7 @@
 use bitter::{BitReader as _, LittleEndianReader};
 use bytemuck::Contiguous;
 
-use crate::protocol::{Request, Response};
+use crate::protocol::{ParsingState, Request, Response};
 
 pub struct GetHealthRequest;
 
@@ -25,10 +25,17 @@ pub struct GetHealthResponse {
 }
 
 impl Response for GetHealthResponse {
-	fn parse(reader: &mut LittleEndianReader) -> Option<Self> {
-		let status = HealthStatus::from_integer(reader.read_u8()?)?;
-		let error_code = reader.read_u16()?;
+	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
+		let Some(status) = reader.read_u8() else {
+			return ParsingState::Unfinished;
+		};
+		let Some(status) = HealthStatus::from_integer(status) else {
+			return ParsingState::Invalid;
+		};
+		let Some(error_code) = reader.read_u16() else {
+			return ParsingState::Unfinished;
+		};
 
-		Some(Self { status, error_code })
+		ParsingState::Done(Self { status, error_code })
 	}
 }

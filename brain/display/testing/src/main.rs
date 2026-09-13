@@ -1,11 +1,9 @@
 use std::time::Duration;
 
 use autons::route;
-use coprocessor::{
-	requests::{CalibrateRequest, GetPositionRequest, GetVelocityRequest},
-	vexide::CoprocessorSmartPort,
-};
+use coprocessor::vexide::CoprocessorSmartPort;
 use display::{state::SelectedPage, vexide::RobotUi};
+use shrewnit::{Degrees, Millimeters};
 use vexide::{prelude::Peripherals, time::sleep};
 
 #[vexide::main]
@@ -19,13 +17,13 @@ async fn main(peripherals: Peripherals) {
 		let state_clone = ui.state_clone(); // Gee I sure wish I had ergonomic ref counting right now
 		let copro_clone = copro.clone();
 		let calibration_cb = move || {
-			let state_clone = state_clone.clone();
-			let copro_clone = copro_clone.clone();
-			vexide::task::spawn(async move {
-				_ = copro_clone.send_request(CalibrateRequest).await;
-				state_clone.borrow_mut().odometry.calibrating = false;
-			})
-			.detach();
+			// let state_clone = state_clone.clone();
+			// let copro_clone = copro_clone.clone();
+			// vexide::task::spawn(async move {
+			// 	_ = copro_clone.send_request(CalibrateRequest).await;
+			// 	state_clone.borrow_mut().odometry.calibrating = false;
+			// })
+			// .detach();
 		};
 
 		let mut state = ui.state_mut();
@@ -48,21 +46,19 @@ async fn main(peripherals: Peripherals) {
 
 	// Periodically refresh position & velocity
 	loop {
-		if let Ok(position) = copro.send_request(GetPositionRequest).await {
-			let odometry = &mut ui.state_mut().odometry;
-
-			odometry.x = position.x;
-			odometry.y = position.y;
-			odometry.h = position.heading;
+		let m = {
+			let mut lidar = copro.lidar.write().await;
+			let m = lidar.pop_back();
+			lidar.clear();
+			m
+		};
+		if let Some(m) = m {
+			ui.state_mut().lidar.measurement = (
+				m.angle.to::<Degrees>() as f32,
+				m.distance.to::<Millimeters>() as f32,
+				m.quality,
+			);
 		}
-		sleep(Duration::from_millis(5)).await;
-		if let Ok(velocity) = copro.send_request(GetVelocityRequest).await {
-			let odometry = &mut ui.state_mut().odometry;
-
-			odometry.vx = velocity.x;
-			odometry.vy = velocity.y;
-			odometry.vh = velocity.heading;
-		}
-		sleep(Duration::from_millis(5)).await;
+		sleep(Duration::from_millis(3)).await;
 	}
 }

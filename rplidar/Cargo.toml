@@ -8,6 +8,7 @@ edition = "2024"
 bitter = { version = "0.9.0", default-features = false }
 # Efficient and safe struct casting
 bytemuck = { version = "1.25.0", default-features = false, features = ["derive", "min_const_generics", "must_cast"] }
+defmt = "1.1.1"
 
 [dev-dependencies]
 nannou = { version = "0.20.0" }
