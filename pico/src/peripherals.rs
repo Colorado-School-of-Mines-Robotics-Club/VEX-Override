@@ -4,10 +4,11 @@ use embassy_rp::{
 	i2c::{self, I2c},
 	peripherals::*,
 	pio::{self, Pio, StateMachine},
-	uart::{self, DataBits, Parity, StopBits, Uart},
+	uart::{self, Async, BufferedUart, BufferedUartRx, DataBits, Parity, StopBits, Uart, UartTx},
 	usb,
 	watchdog::{self, Watchdog},
 };
+use static_cell::StaticCell;
 
 use crate::pio::{blinker::setup_blinker_sm, ws2812b::setup_ws2812b_sm};
 
@@ -30,7 +31,7 @@ pub type LidarUARTRxDMA = DMA_CH4;
 // Link interrupts to their proper handlers
 bind_interrupts!(pub struct Irq {
 	UART0_IRQ => uart::InterruptHandler<BrainUART>;
-	UART1_IRQ => uart::InterruptHandler<LidarUART>;
+	UART1_IRQ => uart::InterruptHandler<LidarUART>, uart::BufferedInterruptHandler<LidarUART>;
 	DMA_IRQ_0 =>
 		dma::InterruptHandler<BrainUARTTxDMA>,
 		dma::InterruptHandler<BrainUARTRxDMA>,
@@ -65,7 +66,7 @@ pub struct CoproPeripherals<'a> {
 	pub leds_sm: StateMachine<'a, LedsPIO, LEDS_STATE_MACHINE>,
 	pub leds_dma: dma::Channel<'a>,
 	/// Lidar sensor UART
-	pub lidar_uart: Uart<'a, uart::Async>,
+	pub lidar_uart: (UartTx<'a, Async>, BufferedUartRx),
 }
 
 pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
@@ -84,6 +85,41 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 		p.PIN_6,
 		800_000,
 	); // 800Kbps
+
+	let (tx_uart, rx_uart) = {
+		let tx_uart = p.UART1;
+		// SAFETY: Each uart is only going to a TX or an RX, and doesn't leave this scope
+		let rx_uart = unsafe { tx_uart.clone_unchecked() };
+		(
+			UartTx::new(tx_uart, p.PIN_4, p.DMA_CH3, Irq, {
+				// 460800 8n1 UART for brain communication
+				let mut cfg = uart::Config::default();
+				cfg.baudrate = 460800;
+				cfg.data_bits = DataBits::DataBits8;
+				cfg.stop_bits = StopBits::STOP1;
+				cfg.parity = Parity::ParityNone;
+				cfg
+			}),
+			BufferedUartRx::new(
+				rx_uart,
+				Irq,
+				p.PIN_5,
+				{
+					static BUF: StaticCell<[u8; 1024]> = StaticCell::new();
+					BUF.init([0u8; _])
+				},
+				{
+					// 460800 8n1 UART for brain communication
+					let mut cfg = uart::Config::default();
+					cfg.baudrate = 460800;
+					cfg.data_bits = DataBits::DataBits8;
+					cfg.stop_bits = StopBits::STOP1;
+					cfg.parity = Parity::ParityNone;
+					cfg
+				},
+			),
+		)
+	};
 
 	// Configure the rest
 	CoproPeripherals {
@@ -109,15 +145,26 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 			cfg.parity = Parity::ParityNone;
 			cfg
 		}),
-		lidar_uart: Uart::new(p.UART1, p.PIN_4, p.PIN_5, Irq, p.DMA_CH3, p.DMA_CH4, {
-			// 921600 8n1 UART for brain communication
-			let mut cfg = uart::Config::default();
-			cfg.baudrate = 460800;
-			cfg.data_bits = DataBits::DataBits8;
-			cfg.stop_bits = StopBits::STOP1;
-			cfg.parity = Parity::ParityNone;
-			cfg
-		}),
+		// lidar_uart: Uart::new(
+		// 	p.UART1,
+		// 	p.PIN_4,
+		// 	p.PIN_5,
+		// 	Irq,
+		// 	p.DMA_CH3,
+		// 	p.DMA_CH4,
+		// 	// LIDAR_TX_BUF.init([0u8; _]),
+		// 	// LIDAR_RX_BUF.init([0u8; _]),
+		// 	{
+		// 		// 460800 8n1 UART for brain communication
+		// 		let mut cfg = uart::Config::default();
+		// 		cfg.baudrate = 460800;
+		// 		cfg.data_bits = DataBits::DataBits8;
+		// 		cfg.stop_bits = StopBits::STOP1;
+		// 		cfg.parity = Parity::ParityNone;
+		// 		cfg
+		// 	},
+		// ),
+		lidar_uart: (tx_uart, rx_uart),
 		blinker_sm,
 		leds_sm,
 		leds_dma: dma::Channel::new(p.DMA_CH2, Irq),

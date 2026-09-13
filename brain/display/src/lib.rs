@@ -59,7 +59,8 @@ pub fn top_level_view<R, const N: usize>(
 		page_selector(state),
 		match_view!(state.page, {
 			SelectedPage::Autons => pages::autons::view(state),
-			SelectedPage::Odometry => pages::odometry::view(state)
+			SelectedPage::Odometry => pages::odometry::view(state),
+			SelectedPage::Lidar => pages::lidar::view(state)
 		}),
 	))
 }

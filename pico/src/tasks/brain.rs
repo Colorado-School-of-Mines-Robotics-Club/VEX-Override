@@ -55,46 +55,46 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 	// let tx_buf = TX_BUFFER.init([0u8; _]);
 	let cobs_buf = COBS_BUFFER.init([0u8; _]);
 
-	match select3(
-		Timer::after(Duration::from_millis(250)),
-		LIDAR_MEASUREMENTS.receive(),
-		LATEST_READINGS.wait(),
-	)
-	.await
-	{
-		// Ping for updates from brain
-		Either3::First(_) => {
-			_ = uart.write(&[0x02, b'r', 0x00]).await;
-			let mut cursor = 0;
-			loop {
-				_ = uart.read(&mut cobs_buf[cursor..(cursor + 1)]).await;
-				if cobs_buf[cursor] == 0x00 {
-					break;
+	loop {
+		match select3(
+			Timer::after(Duration::from_millis(250)),
+			LIDAR_MEASUREMENTS.receive(),
+			LATEST_READINGS.wait(),
+		)
+		.await
+		{
+			// Ping for updates from brain
+			Either3::First(_) => {
+				_ = uart.write(&[0x02, b'r', 0x00]).await;
+				let mut cursor = 0;
+				loop {
+					_ = uart.read(&mut cobs_buf[cursor..(cursor + 1)]).await;
+					if cobs_buf[cursor] == 0x00 {
+						break;
+					}
+					cursor += 1;
 				}
-				cursor += 1;
-			}
-			let len = cobs::decode_in_place(&mut cobs_buf[..]).expect("todo don't panic");
+				let len = cobs::decode_in_place(&mut cobs_buf[..]).expect("todo don't panic");
 
-			cursor = 0;
-			while cursor < len {
-				cursor += 1;
-				match cobs_buf[cursor] {
-					b'c' => {
-						_ = otos::SERVICE.request(OtosAction::Calibrate).await;
-					}
-					b'p' => {
-						_ = otos::SERVICE
-							.request(OtosAction::SetPosition(bytemuck::must_cast::<
-								[u8; 6],
-								OtosPose,
-							>(
-								cobs_buf[cursor..(cursor + 6)].try_into().unwrap(),
-							)))
-							.await;
-					}
-					b's' => {
-						_ =
-							join(
+				cursor = 0;
+				while cursor < len {
+					cursor += 1;
+					match cobs_buf[cursor] {
+						b'c' => {
+							_ = otos::SERVICE.request(OtosAction::Calibrate).await;
+						}
+						b'p' => {
+							_ = otos::SERVICE
+								.request(OtosAction::SetPosition(bytemuck::must_cast::<
+									[u8; 6],
+									OtosPose,
+								>(
+									cobs_buf[cursor..(cursor + 6)].try_into().unwrap(),
+								)))
+								.await;
+						}
+						b's' => {
+							_ = join(
 								otos::SERVICE.request(OtosAction::SetScalars(
 									bytemuck::must_cast::<[u8; 2], OtosScalars>(
 										cobs_buf[cursor..(cursor + 2)].try_into().unwrap(),
@@ -107,46 +107,47 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 								)),
 							)
 							.await;
+						}
+						_ => unreachable!(),
 					}
-					_ => unreachable!(),
 				}
+
+				todo!()
 			}
+			// Send lidar
+			Either3::Second(mut measurement) => {
+				// Encode message
+				let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
+				_ = cobs.push(b"l"); // Todo handle errors
+				loop {
+					_ = cobs.push(&bytemuck::must_cast::<_, [u8; size_of::<f32>()]>(
+						measurement.angle,
+					));
+					_ = cobs.push(&bytemuck::must_cast::<_, [u8; size_of::<f32>()]>(
+						measurement.distance,
+					));
+					_ = cobs.push(&[measurement.quality]);
 
-			todo!()
-		}
-		// Send lidar
-		Either3::Second(mut measurement) => {
-			// Encode message
-			let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
-			_ = cobs.push(b"l"); // Todo handle errors
-			loop {
-				_ = cobs.push(&bytemuck::must_cast::<_, [u8; size_of::<f32>()]>(
-					measurement.angle,
-				));
-				_ = cobs.push(&bytemuck::must_cast::<_, [u8; size_of::<f32>()]>(
-					measurement.distance,
-				));
-				_ = cobs.push(&[measurement.quality]);
-
-				if let Ok(m) = LIDAR_MEASUREMENTS.try_peek() {
-					measurement = m
-				} else {
-					break;
+					if let Ok(m) = LIDAR_MEASUREMENTS.try_receive() {
+						measurement = m
+					} else {
+						break;
+					}
 				}
+				let len = cobs.finalize();
+				cobs_buf[len] = 0x00;
+				// Send message
+				_ = uart.write(&cobs_buf[..=len]).await;
 			}
-			let len = cobs.finalize();
-			cobs_buf[len] = 0x00;
-			// Send message
-			_ = uart.write(&cobs_buf[..len]).await;
-		}
-		// Send OTOS
-		Either3::Third(data) => {
-			let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
-			_ = cobs.push(b"o");
-			_ = cobs.push(&data);
-			let len = cobs.finalize();
-			cobs_buf[len] = 0x00;
-			_ = uart.write(&cobs_buf[..len]).await;
+			// Send OTOS
+			Either3::Third(data) => {
+				let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
+				_ = cobs.push(b"o");
+				_ = cobs.push(&data);
+				let len = cobs.finalize();
+				cobs_buf[len] = 0x00;
+				_ = uart.write(&cobs_buf[..=len]).await;
+			}
 		}
 	}
 }

@@ -4,6 +4,12 @@ pub mod vexide;
 use shrewnit::{Angle, Length};
 pub use units::*;
 
+pub struct LidarMeasurement {
+	pub angle: Angle,
+	pub distance: Length,
+	pub quality: u8,
+}
+
 pub struct OtosPose {
 	pub x: Length,
 	pub y: Length,

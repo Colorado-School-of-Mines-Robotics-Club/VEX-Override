@@ -1,6 +1,6 @@
 use bitter::{BitReader as _, LittleEndianReader};
 
-use crate::protocol::{Request, Response};
+use crate::protocol::{ParsingState, Request, Response};
 
 #[derive(Debug)]
 pub struct GetInfoRequest;
@@ -77,18 +77,28 @@ impl std::fmt::Display for GetInfoResponse {
 }
 
 impl Response for GetInfoResponse {
-	fn parse(reader: &mut LittleEndianReader) -> Option<Self> {
-		let sub_model = reader.read_bits(4)? as u8;
-		let major_model = reader.read_bits(4)? as u8;
-		let firmware_minor = reader.read_u8()?;
-		let firmware_major = reader.read_u8()?;
-		let hardware = reader.read_u8()?;
+	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
+		let Some(sub_model) = reader.read_bits(4).map(|v| v as u8) else {
+			return ParsingState::Unfinished;
+		};
+		let Some(major_model) = reader.read_bits(4).map(|v| v as u8) else {
+			return ParsingState::Unfinished;
+		};
+		let Some(firmware_minor) = reader.read_u8() else {
+			return ParsingState::Unfinished;
+		};
+		let Some(firmware_major) = reader.read_u8() else {
+			return ParsingState::Unfinished;
+		};
+		let Some(hardware) = reader.read_u8() else {
+			return ParsingState::Unfinished;
+		};
 		let mut serial_number = [0u8; _];
 		if !reader.read_bytes(&mut serial_number) {
-			return None;
+			return ParsingState::Invalid;
 		};
 
-		Some(Self {
+		ParsingState::Done(Self {
 			sub_model,
 			major_model,
 			firmware_minor,

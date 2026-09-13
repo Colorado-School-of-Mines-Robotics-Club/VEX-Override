@@ -1,5 +1,5 @@
 use coprocessor::{
-	requests::{CalibrateRequest, GetPositionRequest},
+	// requests::{CalibrateRequest, GetPositionRequest},
 	vexide::CoprocessorSmartPort,
 };
 use vexide::prelude::*;
@@ -8,12 +8,12 @@ use vexide::prelude::*;
 async fn main(peripherals: Peripherals) {
 	let coprocessor = CoprocessorSmartPort::new(peripherals.port_6).await;
 
-	_ = coprocessor.send_request(CalibrateRequest).await;
+	// _ = coprocessor.send_request(CalibrateRequest).await;
 
-	match coprocessor.send_request(GetPositionRequest).await {
-		Ok(position) => {
-			dbg!(position);
-		}
-		Err(e) => eprintln!("Failed to request position: {:?}", e),
-	}
+	// match coprocessor.send_request(GetPositionRequest).await {
+	// 	Ok(position) => {
+	// 		dbg!(position);
+	// 	}
+	// 	Err(e) => eprintln!("Failed to request position: {:?}", e),
+	// }
 }

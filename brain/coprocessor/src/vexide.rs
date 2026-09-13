@@ -1,30 +1,39 @@
 use std::{
+	collections::VecDeque,
 	io::Write as _,
 	rc::Rc,
-	sync::mpsc::{Receiver, Sender},
+	sync::{
+		Arc,
+		mpsc::{Receiver, Sender},
+	},
 	time::Duration,
 };
 
 use cobs::{CobsDecoderOwned, CobsEncoder};
-use vexide::{prelude::SerialPort, smart::SmartPort, task::Task, time::sleep};
+use shrewnit::{Degrees, Millimeters};
+use vexide::{prelude::SerialPort, smart::SmartPort, sync::RwLock, task::Task, time::sleep};
 
-use crate::{CoproRequest, OtosAngle, OtosLength, OtosPose, OtosScalars};
+use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosLength, OtosPose, OtosScalars};
 
 #[derive(Clone)]
 pub struct CoprocessorSmartPort {
 	requests: Sender<CoproRequest>,
+	pub lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
 	_task: Rc<Task<()>>,
 }
 
 impl CoprocessorSmartPort {
 	pub async fn new(port: SmartPort) -> Self {
 		let (req_send, req_recv) = std::sync::mpsc::channel();
+		let lidar: Arc<RwLock<VecDeque<LidarMeasurement>>> = Default::default();
 		Self {
 			_task: Rc::new(vexide::task::spawn(Self::task(
 				SerialPort::open(port, 921600).await,
 				req_recv,
+				lidar.clone(),
 			))),
 			requests: req_send,
+			lidar,
 		}
 	}
 
@@ -42,7 +51,11 @@ impl CoprocessorSmartPort {
 		_ = self.requests.send(CoproRequest::SetOTOSPosition(position));
 	}
 
-	async fn task(mut port: SerialPort, requests: Receiver<CoproRequest>) {
+	async fn task(
+		mut port: SerialPort,
+		requests: Receiver<CoproRequest>,
+		lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
+	) {
 		let mut decoder = CobsDecoderOwned::new(1024);
 		loop {
 			if let Some(byte) = port.read_byte() {
@@ -56,7 +69,15 @@ impl CoprocessorSmartPort {
 					Ok(Some(len)) => {
 						let decoded = &decoder.dest()[..len];
 						match decoded[0] {
-							b'l' => (),
+							b'l' => {
+								lidar.write().await.push_back(LidarMeasurement {
+									angle: f32::from_le_bytes(decoded[1..5].try_into().unwrap())
+										as f64 * Degrees,
+									distance: f32::from_le_bytes(decoded[5..9].try_into().unwrap())
+										as f64 * Millimeters,
+									quality: decoded[9],
+								});
+							}
 							b'o' => (),
 							b'r' => {
 								// Reuse decoder buffer for encoding, since we don't need to read the decoded message anymore
@@ -102,7 +123,9 @@ impl CoprocessorSmartPort {
 								decoder.dest_mut()[len] = 0x00;
 								_ = port.write_all(&decoder.dest()[..(len + 1)]);
 							}
-							_ => unreachable!(),
+							e => {
+								dbg!(e);
+							}
 						}
 					}
 				}

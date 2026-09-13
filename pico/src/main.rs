@@ -55,8 +55,8 @@ async fn main(spawner: Spawner) {
 		brain_rx(p.brain_uart, p.brain_enable_pin),
 		leds_task(p.leds_sm, p.leds_dma),
 		secondary_bootsel(p.button),
-		watchdog_task(p.watchdog, p.led2),
-		lidar_task(p.lidar_uart)
+		watchdog_task(p.watchdog, p.led2)
+		// lidar_task(p.lidar_uart)
 	);
 	#[cfg(feature = "usb")]
 	spawn_tasks!(

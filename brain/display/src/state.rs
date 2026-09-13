@@ -11,6 +11,7 @@ pub enum SelectedPage {
 	#[default]
 	Autons,
 	Odometry,
+	Lidar,
 }
 
 #[derive(Debug)]
@@ -118,5 +119,6 @@ impl<R, const N: usize> Clone for AutonsState<R, N> {
 
 #[derive(Debug, Default, Clone)]
 pub struct LidarState {
-	pub measurements: VecDeque<(f32, f32)>,
+	// pub measurements: VecDeque<(f32, f32)>,
+	pub measurement: (f32, f32, u8),
 }

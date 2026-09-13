@@ -1,6 +1,6 @@
 use bitter::{BitReader as _, LittleEndianReader};
 
-use crate::protocol::{Request, Response};
+use crate::protocol::{ParsingState, Request, Response};
 
 pub struct GetSampleRateRequest;
 
@@ -17,10 +17,11 @@ pub struct GetSampleRateResponse {
 }
 
 impl Response for GetSampleRateResponse {
-	fn parse(reader: &mut LittleEndianReader) -> Option<Self> {
-		Some(Self {
-			standard: reader.read_u16()?,
-			express: reader.read_u16()?,
-		})
+	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
+		let (standard, express) = match (reader.read_u16(), reader.read_u16()) {
+			(Some(s), Some(e)) => (s, e),
+			(None, _) | (_, None) => return ParsingState::Unfinished,
+		};
+		ParsingState::Done(Self { standard, express })
 	}
 }
