@@ -1,24 +1,32 @@
-use vexide::prelude::*;
+mod swerve;
+
+use std::{cell::RefCell, time::{Duration, Instant}};
+
+use evian::{control::loops::{AngularPid, Feedback, Pid}, math::Angle};
+use shrewnit::MetersPerSecond;
+use vexide::{adi::AdiDeviceType::AnalogIn, prelude::*};
+
+use crate::swerve::{SwervePod, SwervePodInner};
 
 #[derive(Debug)]
 pub struct Robot {
     // Swerve pod motors
-    front_left: (Motor, Motor),
-    front_right: (Motor, Motor),
-    back_left: (Motor, Motor),
-    back_right: (Motor, Motor),
+    pub front_left: SwervePod,
+    pub front_right: SwervePod,
+    pub back_left: SwervePod,
+    pub back_right: SwervePod,
 
     // DR4B lift motors
-    lift_1: Motor,
-    lift_2: Motor,
+    pub lift_1: Motor,
+    pub lift_2: Motor,
 
     // Claw raising
-    bars: Motor,
+    pub bars: Motor,
     // Spin the bar
-    chain: Motor,
+    pub chain: Motor,
 
-    imu: Imu,
-    controller: Controller
+    pub imu: InertialSensor,
+    pub controller: Controller
 }
 
 impl Compete for Robot {
@@ -29,40 +37,61 @@ impl Compete for Robot {
     async fn driver(&mut self) {
         println!("Driver!");
 
-        if let Ok(controller) = self.controller {
-            
+        self.front_left.write().await.set_heading(Angle::ZERO);
+        self.front_left.write().await.set_speed(1.0 * MetersPerSecond);
+
+        loop {
+            sleep(Duration::from_secs(1000)).await
         }
+
+        // loop {
+        //     if let Ok(controller) = self.controller.state() {
+        //         let x_input = controller.right_stick.x();
+        //         let y_input = controller.right_stick.x();
+        //         let r_input = controller.right_stick.x();
+
+
+        //     }
+        // }
     }
 }
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
     let robot = Robot {
-        front_left: (
+        front_left: SwervePodInner::new(
             Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
-            Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward)
+            Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
+            AdiAnalogIn::new(peripherals.adi_e),
+            0
         ),
-        front_right: (
+        front_right: SwervePodInner::new(
             Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
-            Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward)
+            Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
+            AdiAnalogIn::new(peripherals.adi_f),
+            0
         ),
-        back_left: (
+        back_left: SwervePodInner::new(
             Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
-            Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward)
+            Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
+            AdiAnalogIn::new(peripherals.adi_h),
+            0
         ),
-        back_right: (
+        back_right: SwervePodInner::new(
             Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
-            Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward)
+            Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
+            AdiAnalogIn::new(peripherals.adi_g),
+            0
         ),
 
-        lift_1: Motor::new_exp(peripherals.port_10, Direction::Reverse),
-        lift_2: Motor::new_exp(peripherals.port_1, Direction::Forward),
+        lift_1: Motor::new(peripherals.port_10, Gearset::Green,  Direction::Reverse),
+        lift_2: Motor::new(peripherals.port_1,  Gearset::Green, Direction::Forward),
 
         chain: Motor::new_exp(peripherals.port_12, Direction::Forward),
         bars: Motor::new_exp(peripherals.port_13, Direction::Forward),
 
-        controller: peripherals.master_controller,
-        imu: Imu::new(peripherals.port_16)
+        controller: peripherals.primary_controller,
+        imu: InertialSensor::new(peripherals.port_16)
     };
 
     robot.compete().await;

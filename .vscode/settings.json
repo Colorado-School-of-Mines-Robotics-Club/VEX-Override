@@ -1,0 +1,10 @@
+{
+	"rust-analyzer.check.targets": ["armv7a-vex-v5"],
+	"rust-analyzer.check.allTargets": false,
+	"rust-analyzer.cargo.features": "all",
+	"rust-analyzer.check.command": "clippy",
+	"rust-analyzer.linkedProjects": [
+        "brain/Cargo.toml",
+        "pico/Cargo.toml"
+    ]
+}

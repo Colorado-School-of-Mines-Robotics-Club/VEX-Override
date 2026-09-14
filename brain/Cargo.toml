@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["coprocessor", "display", "display/simulator", "display/testing"]
+members = ["swerve", "coprocessor"
+#,"display", "display/simulator", "display/testing"
+]
 
 [workspace.dependencies]
 vexide = { version = "0.9.0-alpha.1", features = ["full", "default-sdk"] }
