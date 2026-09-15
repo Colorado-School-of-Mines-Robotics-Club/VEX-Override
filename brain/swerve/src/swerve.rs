@@ -1,85 +1,124 @@
-use std::{cell::RefCell, rc::Rc, time::{Duration, Instant}};
+use std::{
+	cell::Cell,
+	f64,
+	rc::Rc,
+	time::{Duration, Instant},
+};
 
-use evian::control::loops::{AngularPid, Feedback as _, Pid};
-use shrewnit::{LinearVelocity, MetersPerSecond};
-use vexide::{adi::analog::AdiAnalogIn, math::Angle, smart::motor::Motor, sync::RwLock, time::sleep};
+use evian::control::loops::{AngularPid, Feedback as _};
+use shrewnit::{
+	Inches, Length, LinearVelocity, Meters, MetersPerSecond, One, RadiansPerSecond,
+	RotationsPerMinute,
+};
+use vexide::{
+	adi::{AdiDevice, analog::AdiAnalogIn},
+	math::Angle,
+	smart::motor::Motor,
+	time::sleep,
+};
 
-pub type SwervePod = Rc<RwLock<SwervePodInner>>;
+/// Stores all the task's inner data
+struct SwervePodInner {
+	motor_a: Motor,
+	motor_b: Motor,
+	rotation: AdiAnalogIn,
+	analog_offset: u16,
 
-#[derive(Debug)]
-pub struct SwervePodInner {
-    motor_a: Motor,
-    motor_b: Motor,
-    rotation: AdiAnalogIn,
-    analog_offset: u16,
-
-    linear_pid: Pid,
-    turn_pid: AngularPid,
-
-    target_heading: Angle,
-    target_speed: LinearVelocity,
+	// linear_pid: Pid,
+	turn_pid: AngularPid,
 }
 
-const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
+#[derive(Debug, Clone)]
+pub struct SwervePod {
+	target_heading: Rc<Cell<Angle>>,
+	target_speed: Rc<Cell<LinearVelocity>>,
+}
+
+// const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
 const TURN_PID: AngularPid = AngularPid::new(5.0, 0.0, 0.2, None);
+const WHEEL_RADIUS: Length = <Inches as One<f64, _>>::ONE.mul_scalar(2.75 / 2.0);
+const LINEAR_GEAR_RATIO: f64 = 1.0;
+const ANGULAR_GEAR_RATIO: f64 = 0.5;
 
-impl SwervePodInner {
-    pub fn new(motor_a: Motor, motor_b: Motor, rotation: AdiAnalogIn, analog_offset: u16) -> Rc<RwLock<Self>> {
-        let v = Rc::new(RwLock::new(Self {
-            motor_a,
-            motor_b,
-            rotation,
-            analog_offset,
+impl SwervePod {
+	pub fn new(motor_a: Motor, motor_b: Motor, rotation: AdiAnalogIn, analog_offset: u16) -> Self {
+		let pod = Self {
+			target_heading: Rc::new(Cell::new(Angle::ZERO)),
+			target_speed: Rc::new(Cell::new(0.0 * MetersPerSecond)),
+		};
 
-            linear_pid: LINEAR_PID,
-            turn_pid: TURN_PID,
+		let inner = SwervePodInner {
+			motor_a,
+			motor_b,
+			rotation,
+			analog_offset,
 
-            target_heading: Angle::ZERO,
-            target_speed: 0.0 * MetersPerSecond
-        }));
-        
-        vexide::task::spawn(Self::task(v.clone())).detach();
+			// linear_pid: LINEAR_PID,
+			turn_pid: TURN_PID,
+		};
 
-        v
-    }
+		vexide::task::spawn(Self::task(pod.clone(), inner)).detach();
 
-    pub fn set_heading(&mut self, heading: Angle) {
-        self.target_heading = heading;
-    }
+		pod
+	}
 
-    pub fn set_speed(&mut self, speed: LinearVelocity) {
-        self.target_speed = speed;
-    }
+	pub fn set_heading(&mut self, heading: Angle) {
+		self.target_heading.set(heading);
+	}
 
-    async fn task(pod: Rc<RwLock<Self>>) {
-        // double linearRPM = ((aMotorRPM - bMotorRPM) / 2) * 30/30 ; wheel size 2.75 in
-        // double turnRPM = ((aMotorRPM + bMotorRPM) / 2) * 30/60;
+	pub fn set_speed(&mut self, speed: LinearVelocity) {
+		self.target_speed.set(speed);
+	}
 
-        let mut timer = Instant::now();
+	async fn task(pod: SwervePod, mut inner: SwervePodInner) {
+		// Diffy swerve math:
+		// double linearRPM = ((aMotorRPM - bMotorRPM) / 2) * 30/30 ; wheel size 2.75 in
+		// double turnRPM = ((aMotorRPM + bMotorRPM) / 2) * 30/60;
 
-        loop {
-            let mut pod = pod.write().await;
+		let mut timer = Instant::now();
 
-            let angle = pod.rotation.value().expect("Failed to read angle encoder");
-            let angle = Angle::from_degrees((angle + pod.analog_offset % 4096) as f64 / 4096.0 * 360.0);
-            let target_heading = pod.target_heading;
+		loop {
+			// Use PID with the current wheel heading and desired heading
+			let angle = if let Ok(a) = inner.rotation.value() {
+				a
+			} else {
+				eprintln!(
+					"Warning: failed to read rotation sensor on pod from port {}",
+					inner.rotation.port_numbers()[0]
+				);
+				0
+			};
+			let angle =
+				Angle::from_degrees((angle + inner.analog_offset % 4096) as f64 / 4096.0 * 360.0);
+			let target_heading = pod.target_heading.get();
 
-            let turn = pod.turn_pid.update(angle, target_heading, timer.elapsed());
+			let turn = inner
+				.turn_pid
+				.update(angle, target_heading, timer.elapsed());
 
-            let current_speed = (pod.motor_a.velocity().unwrap_or(0.0) - pod.motor_b.velocity().unwrap_or(0.0)) / 2.0;
-            
-            let target_speed = pod.target_speed.to::<MetersPerSecond>();
-            let linear = pod.linear_pid.update(current_speed.abs(), target_speed, timer.elapsed());
-            // let linear = 0.0;
+			// // Use PID with current wheel velocity and desired velocity
+			// let current_speed = (inner.motor_a.velocity().unwrap_or(0.0)
+			// 	- inner.motor_b.velocity().unwrap_or(0.0))
+			// 	/ 2.0;
 
-            // dbg!(linear, turn);
+			// let target_speed = pod.target_speed.get().to::<MetersPerSecond>();
+			// let linear =
+			// 	inner
+			// 		.linear_pid
+			// 		.update(current_speed.abs(), target_speed, timer.elapsed());
 
-            _ = pod.motor_a.set_velocity((turn + linear) as i32);
-            _ = pod.motor_b.set_velocity((turn - linear) as i32);
+			let linear = pod.target_speed.get().to::<MetersPerSecond>() / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
+			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
 
-            timer = Instant::now();
-            std::mem::drop(pod);
-            sleep(Duration::from_millis(10)).await;
-        }
-    }
+			_ = inner
+				.motor_a
+				.set_velocity((turn / ANGULAR_GEAR_RATIO + linear / LINEAR_GEAR_RATIO) as i32);
+			_ = inner
+				.motor_b
+				.set_velocity((turn / ANGULAR_GEAR_RATIO - linear / LINEAR_GEAR_RATIO) as i32);
+
+			timer = Instant::now();
+			sleep(Duration::from_millis(10)).await;
+		}
+	}
 }

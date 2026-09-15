@@ -3,10 +3,6 @@ name = "swerve"
 version = "0.1.0"
 edition = "2024"
 
-[profile.release]
-opt-level = "z"
-lto = "fat"
-
 # These fields configure default behavior for uploads with `cargo v5`.
 [package.metadata.v5]
 upload-strategy = "differential"
