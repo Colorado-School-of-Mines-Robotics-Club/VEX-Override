@@ -1,13 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["swerve", "coprocessor"
-#,"display", "display/simulator", "display/testing"
-, "common"]
+members = ["common", "bots/swerve", "coprocessor", "display", "display/testing"]
 
 [workspace.dependencies]
 # Vexide (and vex-related deps)
 vexide = { version = "0.9.0-alpha.1", features = ["full", "default-sdk"] }
-evian = { git = "https://github.com/TymanWasTaken/evian" }
+evian = { git = "https://github.com/TymanWasTaken/evian" } # All of these are git forks to make them compatible with vexide 0.9.0-alpha.1
 autons = { git = "https://github.com/TymanWasTaken/autons" }
 shrewnit = { git = "https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit" }
 vexide-motorgroup = { git = "https://github.com/TymanWasTaken/vexide-motorgroup" }

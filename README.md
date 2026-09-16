@@ -33,9 +33,10 @@ don't, all the necessary tools are listed below:
 
 | Folder                                     | Description                                                                                                                   |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| [`pico/`](./pico/)                         | The code running on the Raspberry Pi Pico 2 microcontroller we use on our bots                                                |
-| [`pico/src/lidar`](./pico/src/lidar)       | Rust code implementing the prococol for RPLIDAR S & C series devices, may be factored out into a seperate crate at some point |
-| [`pcb/`](./pcb/)                           | The kicad files (schematics, layouts, etc) for the custom PCB connected to our Picos and v5 brains                            |
 | [`brain/bots`](./brain/bots)               | Top-level code running on our bots' v5 brains, setting up subsystems and declaring autonomous routes                          |
 | [`brain/common`](./brain/common)           | Bot-agnostic v5 brain code such as shared subsystems or display logic                                                         |
 | [`brain/coprocessor`](./brain/coprocessor) | Brain-side logic for communicating with the Pico microcontroller                                                              |
+| [`pico/`](./pico/)                         | The code running on the Raspberry Pi Pico 2 microcontroller we use on our bots                                                |
+| [`rplidar/`](./rplidar)                    | Rust code implementing the prococol for RPLIDAR S & C series devices, may be factored out into a seperate crate at some point |
+| [`swerve_c++/`](./swerve_c++)              | Prototype C++ (PROS) code used for initially testing the swerve bot                                                           |
+| [`pcb/`](./pcb)                            | The kicad files (schematics, layouts, etc) for the custom PCB connected to our Picos and v5 brains                            |
