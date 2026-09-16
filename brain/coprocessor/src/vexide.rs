@@ -15,7 +15,7 @@ use vexide::{prelude::SerialPort, smart::SmartPort, sync::RwLock, task::Task, ti
 
 use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosLength, OtosPose, OtosScalars};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CoprocessorSmartPort {
 	requests: Sender<CoproRequest>,
 	pub lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,

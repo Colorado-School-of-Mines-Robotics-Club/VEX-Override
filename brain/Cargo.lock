@@ -489,6 +489,7 @@ name = "swerve"
 version = "0.1.0"
 dependencies = [
  "common",
+ "coprocessor",
  "evian",
  "shrewnit",
  "vexide",
