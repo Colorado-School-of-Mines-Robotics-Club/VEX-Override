@@ -41,6 +41,11 @@ const LINEAR_GEAR_RATIO: f64 = 1.0;
 const ANGULAR_GEAR_RATIO: f64 = 0.5;
 
 impl SwervePod {
+	/// Create a new SwervePod given the two differential motors, a rotation sensor, and a sensor offset
+	///
+	/// The offset should be chosen such that when added mod 4096 to the rotation input, zero means the
+	/// wheel is facing directly forward on the robot. Which direction on the wheel is forward does not
+	/// matter, the pod will always choose the closest path to the desired angle.
 	pub fn new(motor_a: Motor, motor_b: Motor, rotation: AdiAnalogIn, analog_offset: u16) -> Self {
 		let pod = Self {
 			target_heading: Rc::new(Cell::new(Angle::ZERO)),

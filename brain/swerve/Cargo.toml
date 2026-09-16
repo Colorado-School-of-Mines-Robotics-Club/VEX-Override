@@ -11,8 +11,9 @@ icon = "cool-x"
 compress = true
 
 [dependencies]
-evian = { path = "../../../evian/packages/evian" }
+evian.workspace = true
 vexide.workspace = true
 shrewnit.workspace = true
-
+vexide-motorgroup.workspace = true
+common = { path = "../common" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

@@ -1,8 +1,4 @@
-use shrewnit::{
-	Angle, AngularAcceleration, AngularVelocity, Degrees, DegreesPerSecond,
-	DegreesPerSecondSquared, Length, LinearAcceleration, LinearVelocity, Meters, MetersPerSecond,
-	MetersPerSecondSquared,
-};
+use shrewnit::*;
 
 const OTOS_I16_MAX: f64 = i16::MAX as f64 + 1.0;
 
