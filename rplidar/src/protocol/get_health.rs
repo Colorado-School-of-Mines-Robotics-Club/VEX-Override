@@ -11,14 +11,14 @@ impl Request for GetHealthRequest {
 }
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, Contiguous)]
+#[derive(Debug, Clone, Copy, Contiguous, defmt::Format)]
 pub enum HealthStatus {
 	Good = 0x00,
 	Warning = 0x01,
 	Error = 0x02,
 }
 
-#[derive(Debug)]
+#[derive(Debug, defmt::Format)]
 pub struct GetHealthResponse {
 	pub status: HealthStatus,
 	pub error_code: u16,

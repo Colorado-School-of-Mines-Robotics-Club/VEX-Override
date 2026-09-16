@@ -105,7 +105,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 				Irq,
 				p.PIN_5,
 				{
-					static BUF: StaticCell<[u8; 1024]> = StaticCell::new();
+					static BUF: StaticCell<[u8; 2048]> = StaticCell::new();
 					BUF.init([0u8; _])
 				},
 				{

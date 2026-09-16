@@ -60,8 +60,9 @@ async fn main(spawner: Spawner) {
 	#[cfg(feature = "usb")]
 	spawn_tasks!(
 		spawner;
-		defmt_usb(p.usb),
-		pinger()
+		defmt_usb(p.usb)
+			//,
+		//pinger()
 	);
 }
 

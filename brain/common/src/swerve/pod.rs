@@ -28,6 +28,7 @@ struct SwervePodInner {
 	turn_pid: AngularPid,
 }
 
+/// A single 2-motor + rotation sensor differential swerve pod.
 #[derive(Debug, Clone)]
 pub struct SwervePod {
 	target_heading: Rc<Cell<Angle>>,
@@ -76,10 +77,6 @@ impl SwervePod {
 	}
 
 	async fn task(pod: SwervePod, mut inner: SwervePodInner) {
-		// Diffy swerve math:
-		// double linearRPM = ((aMotorRPM - bMotorRPM) / 2) * 30/30 ; wheel size 2.75 in
-		// double turnRPM = ((aMotorRPM + bMotorRPM) / 2) * 30/60;
-
 		let mut timer = Instant::now();
 
 		loop {
@@ -95,7 +92,7 @@ impl SwervePod {
 			};
 			let angle =
 				Angle::from_degrees((angle + inner.analog_offset % 4096) as f64 / 4096.0 * 360.0);
-			let target_heading = pod.target_heading.get();
+			let target_heading = pod.target_heading.get().wrapped_half();
 
 			let turn = inner
 				.turn_pid

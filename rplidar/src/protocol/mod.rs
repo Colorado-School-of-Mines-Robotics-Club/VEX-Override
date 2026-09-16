@@ -142,12 +142,26 @@ impl ResponseDescriptor {
 
 impl Response for ResponseDescriptor {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
-		let Some(tag) = reader.read_u16() else {
-			return ParsingState::Unfinished(7 - reader.bytes_remaining());
-		};
-		if tag != const { u16::from_le_bytes(RESPONSE_DESCRIPTOR_TAG) } {
-			return ParsingState::Invalid;
-		};
+		// let Some(tag_start) = reader.read_u8() else {
+		// 	return ParsingState::Unfinished(7);
+		// };
+		// if tag_start != RESPONSE_DESCRIPTOR_TAG[0] {
+		// 	return ParsingState::Invalid;
+		// }
+		// let Some(tag_end) = reader.read_u8() else {
+		// 	return ParsingState::Unfinished(6);
+		// };
+		// if [tag_start, tag_end] != RESPONSE_DESCRIPTOR_TAG {
+		// 	return ParsingState::Invalid;
+		// };
+		//
+		for (i, &tag) in RESPONSE_DESCRIPTOR_TAG.iter().enumerate() {
+			match reader.read_u8() {
+				None => return ParsingState::Unfinished(7 - i),
+				Some(v) if v != tag => return ParsingState::Invalid,
+				_ => (),
+			}
+		}
 
 		let Some(length) = reader.read_bits(30).map(|v| v as usize) else {
 			return ParsingState::Unfinished(5 - reader.bytes_remaining());
