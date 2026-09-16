@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 vexide.workspace = true
 evian.workspace = true
+shrewnit.workspace = true

@@ -18,10 +18,13 @@ pub struct GetSampleRateResponse {
 
 impl Response for GetSampleRateResponse {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
-		let (standard, express) = match (reader.read_u16(), reader.read_u16()) {
-			(Some(s), Some(e)) => (s, e),
-			(None, _) | (_, None) => return ParsingState::Unfinished,
+		let Some(standard) = reader.read_u16() else {
+			return ParsingState::Unfinished(4 - reader.bytes_remaining());
 		};
+		let Some(express) = reader.read_u16() else {
+			return ParsingState::Unfinished(2 - reader.bytes_remaining());
+		};
+
 		ParsingState::Done(Self { standard, express })
 	}
 }

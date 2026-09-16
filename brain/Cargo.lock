@@ -95,6 +95,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "evian",
+ "shrewnit",
  "vexide",
 ]
 

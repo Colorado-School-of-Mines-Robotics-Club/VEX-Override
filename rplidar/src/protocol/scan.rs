@@ -38,31 +38,33 @@ impl Response for ScanResponse {
 		let start = match reader.read_bits(2) {
 			Some(0b11 | 0b00) => return ParsingState::Invalid,
 			Some(v) => (v >> 1) & 0b1 == 0b1,
-			None => return ParsingState::Unfinished,
+			None => return ParsingState::Unfinished(5),
 		};
 
 		// Next 6 bits are quality, undetermined what they actually mean
 		let Some(quality) = reader.read_bits(6).map(|v| v as u8) else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(5);
 		};
 
 		// Next bit is a check bit, should always be 1
+		let remaining = reader.bytes_remaining();
 		match reader.read_bit() {
 			Some(true) => (),
 			Some(false) => return ParsingState::Invalid,
-			None => return ParsingState::Unfinished,
+			None => return ParsingState::Unfinished(4),
 		};
 
 		// Next is 15 bits are angle, divide by 64.0 to get degrees
 		let Some(angle) = reader.read_bits(15).map(|v| v as f32 / 64.0 % 360.0) else {
-			return ParsingState::Unfinished;
+			// + 1 is because read_bit takes one off
+			return ParsingState::Unfinished(4 - remaining);
 		};
 
 		// Last 16 bits are the distance, or 0 for a failed measurement
 		let distance = match reader.read_u16() {
 			Some(0) => f32::NAN,
 			Some(v) => v as f32 / 4.0,
-			None => return ParsingState::Unfinished,
+			None => return ParsingState::Unfinished(2 - reader.bytes_remaining()),
 		};
 
 		ParsingState::Done(ScanResponse {

@@ -21,8 +21,6 @@ const RESPONSE_DESCRIPTOR_TAG: [u8; 2] = [0xA5, 0x5A];
 const SINGLE_REQUEST_SINGLE_RESPONSE: u8 = 0x0;
 const SINGLE_REQUEST_MULTIPLE_RESPONSE: u8 = 0x1;
 
-const SCAN_RESPONSE_DATA_TYPE: [u8; 2] = [0x40, 0x81];
-
 /// The recommended buffer size for doing I/O with the LIDAR. This is the maximum of the non-variable request and response sizes.
 pub const BUFFER_SIZE: usize = 20;
 // Known request sizes are completely bounded, with a max of 5 for express scan
@@ -34,12 +32,11 @@ pub const MAX_RESPONSE_SIZE: usize = 20;
 /// An enum representing the state of a parser.
 ///
 /// States:
-/// 1. Unfinished - So far so good, but needs more data
+/// 1. Unfinished - So far so good, but needs more data (minimum is returned)
 /// 2. Invalid - An error was encountered, this doesn't look like valid data
 /// 3. Done - Finished parsing successfully
 pub enum ParsingState<T> {
-	// TODO: Add min bytes read for optimization
-	Unfinished,
+	Unfinished(usize),
 	Invalid,
 	Done(T),
 }
@@ -49,18 +46,6 @@ where
 	Self: Sized,
 {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self>;
-
-	/// A helper function to simplify reading a static length from a reader and parsing it
-	///
-	/// This can and should be used with almost all packets, as only one (at least for the c1) sends variable length responses
-	#[cfg(feature = "std")]
-	fn read_from<const LENGTH: usize>(mut reader: impl std::io::Read) -> ParsingState<Self> {
-		let mut buf = [0u8; LENGTH];
-		if let Err(_) = reader.read_exact(&mut buf) {
-			return ParsingState::Unfinished;
-		}
-		Self::parse(&mut LittleEndianReader::new(&buf))
-	}
 }
 
 pub trait Request {
@@ -158,23 +143,23 @@ impl ResponseDescriptor {
 impl Response for ResponseDescriptor {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
 		let Some(tag) = reader.read_u16() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(7 - reader.bytes_remaining());
 		};
 		if tag != const { u16::from_le_bytes(RESPONSE_DESCRIPTOR_TAG) } {
 			return ParsingState::Invalid;
 		};
 
 		let Some(length) = reader.read_bits(30).map(|v| v as usize) else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(5 - reader.bytes_remaining());
 		};
 
 		ParsingState::Done(Self {
 			length,
-			mode: match reader.read_bits(2) {
-				Some(0x0) => ResponseMode::SingleResponse,
-				Some(0x1) => ResponseMode::MultipleResponse,
+			mode: match reader.read_bits(2).map(|v| v as u8) {
+				Some(SINGLE_REQUEST_SINGLE_RESPONSE) => ResponseMode::SingleResponse,
+				Some(SINGLE_REQUEST_MULTIPLE_RESPONSE) => ResponseMode::MultipleResponse,
 				Some(_) => return ParsingState::Invalid,
-				None => return ParsingState::Unfinished,
+				None => return ParsingState::Unfinished(2),
 			},
 			response_type: match reader.read_u8() {
 				Some(0x81) => ResponseType::Scan,
@@ -183,7 +168,7 @@ impl Response for ResponseDescriptor {
 				Some(0x15) => ResponseType::GetSampleRate,
 				Some(0x20) => ResponseType::GetLidarConf,
 				Some(_) => return ParsingState::Invalid,
-				None => return ParsingState::Unfinished,
+				None => return ParsingState::Unfinished(1),
 			},
 		})
 	}

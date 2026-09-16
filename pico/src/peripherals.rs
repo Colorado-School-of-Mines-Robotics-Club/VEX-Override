@@ -4,7 +4,7 @@ use embassy_rp::{
 	i2c::{self, I2c},
 	peripherals::*,
 	pio::{self, Pio, StateMachine},
-	uart::{self, Async, BufferedUart, BufferedUartRx, DataBits, Parity, StopBits, Uart, UartTx},
+	uart::{self, Async, BufferedUartRx, DataBits, Parity, StopBits, Uart, UartTx},
 	usb,
 	watchdog::{self, Watchdog},
 };
@@ -145,25 +145,6 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 			cfg.parity = Parity::ParityNone;
 			cfg
 		}),
-		// lidar_uart: Uart::new(
-		// 	p.UART1,
-		// 	p.PIN_4,
-		// 	p.PIN_5,
-		// 	Irq,
-		// 	p.DMA_CH3,
-		// 	p.DMA_CH4,
-		// 	// LIDAR_TX_BUF.init([0u8; _]),
-		// 	// LIDAR_RX_BUF.init([0u8; _]),
-		// 	{
-		// 		// 460800 8n1 UART for brain communication
-		// 		let mut cfg = uart::Config::default();
-		// 		cfg.baudrate = 460800;
-		// 		cfg.data_bits = DataBits::DataBits8;
-		// 		cfg.stop_bits = StopBits::STOP1;
-		// 		cfg.parity = Parity::ParityNone;
-		// 		cfg
-		// 	},
-		// ),
 		lidar_uart: (tx_uart, rx_uart),
 		blinker_sm,
 		leds_sm,

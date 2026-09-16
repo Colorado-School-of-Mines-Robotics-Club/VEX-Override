@@ -35,10 +35,10 @@ pub struct GetInfoResponse {
 	/// When converting to text in hex, the LSB prints first
 	pub serial_number: [u8; 16],
 }
-const C_MINIMUM_MAJOR_ID: u8 = 4;
-const S_MINIMUM_MAJOR_ID: u8 = 6;
-const T_MINIMUM_MAJOR_ID: u8 = 9;
-const M_MINIMUM_MAJOR_ID: u8 = 12;
+pub const C_MINIMUM_MAJOR_ID: u8 = 4;
+pub const S_MINIMUM_MAJOR_ID: u8 = 6;
+pub const T_MINIMUM_MAJOR_ID: u8 = 9;
+pub const M_MINIMUM_MAJOR_ID: u8 = 12;
 
 #[cfg(feature = "std")]
 impl std::fmt::Display for GetInfoResponse {
@@ -79,23 +79,23 @@ impl std::fmt::Display for GetInfoResponse {
 impl Response for GetInfoResponse {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
 		let Some(sub_model) = reader.read_bits(4).map(|v| v as u8) else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(20);
 		};
 		let Some(major_model) = reader.read_bits(4).map(|v| v as u8) else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(20);
 		};
 		let Some(firmware_minor) = reader.read_u8() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(19);
 		};
 		let Some(firmware_major) = reader.read_u8() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(18);
 		};
 		let Some(hardware) = reader.read_u8() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(17);
 		};
 		let mut serial_number = [0u8; _];
 		if !reader.read_bytes(&mut serial_number) {
-			return ParsingState::Invalid;
+			return ParsingState::Unfinished(16 - reader.bytes_remaining());
 		};
 
 		ParsingState::Done(Self {

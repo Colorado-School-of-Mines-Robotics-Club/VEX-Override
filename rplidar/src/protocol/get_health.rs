@@ -27,13 +27,13 @@ pub struct GetHealthResponse {
 impl Response for GetHealthResponse {
 	fn parse(reader: &mut LittleEndianReader) -> ParsingState<Self> {
 		let Some(status) = reader.read_u8() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(3);
 		};
 		let Some(status) = HealthStatus::from_integer(status) else {
 			return ParsingState::Invalid;
 		};
 		let Some(error_code) = reader.read_u16() else {
-			return ParsingState::Unfinished;
+			return ParsingState::Unfinished(2 - reader.bytes_remaining());
 		};
 
 		ParsingState::Done(Self { status, error_code })
