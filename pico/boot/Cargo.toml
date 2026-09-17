@@ -1,0 +1,28 @@
+[package]
+edition = "2024"
+name = "pico-override-boot"
+version = "0.1.0"
+
+[dependencies]
+embassy-rp = { workspace = true, features = ["rp235xa"] }
+embassy-boot-rp = { workspace = true }
+embassy-sync = { workspace = true }
+embassy-time = { workspace = true, features = [] }
+
+cortex-m = { workspace = true, features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt = { workspace = true }
+embedded-storage = "0.3.1"
+embedded-storage-async = "0.4.0"
+# cfg-if = "1.0.0"
+
+[features]
+# defmt = [
+#     "dep:defmt",
+#     "dep:defmt-rtt",
+#     "embassy-boot-rp/defmt",
+#     "embassy-rp/defmt",
+# ]
+
+[profile.release]
+# debug = true
+opt-level = 's'

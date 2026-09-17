@@ -70,6 +70,10 @@ pub struct CoproPeripherals<'a> {
 }
 
 pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
+	// Clear watchdog incase bootloader set it up
+	let mut watchdog = Watchdog::new(p.WATCHDOG);
+	watchdog.stop();
+
 	// Configure PIO state machines
 	let mut pio0 = Pio::new(p.PIO0, Irq);
 	let mut blinker_sm = pio0.sm0;
@@ -125,7 +129,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 	CoproPeripherals {
 		#[cfg(feature = "usb")]
 		usb: usb::Driver::new(p.USB, Irq),
-		watchdog: Watchdog::new(p.WATCHDOG),
+		watchdog,
 		led2: Output::new(p.PIN_3, Level::Low),
 		button: Input::new(p.PIN_12, Pull::Up),
 		// secondary_bootsel: Input::new(p.PIN_17, Pull::Up),

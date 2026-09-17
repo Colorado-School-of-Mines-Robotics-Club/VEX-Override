@@ -19,12 +19,12 @@ fn main() {
 	let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
 	File::create(out.join("memory.x"))
 		.unwrap()
-		.write_all(include_bytes!("memory.x"))
+		.write_all(include_bytes!("memory.ld"))
 		.unwrap();
 	println!("cargo:rustc-link-search={}", out.display());
 
 	// Rebuild if memory.x changed
-	println!("cargo:rerun-if-changed=memory.x");
+	println!("cargo:rerun-if-changed=memory.ld");
 
 	// Add arguments necessary for compilation
 	println!("cargo:rustc-link-arg-bins=--nmagic");
