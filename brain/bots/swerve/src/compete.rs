@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use evian::{math::Vec2, prelude::Holonomic as _};
+use shrewnit::{AngularVelocity, DegreesPerSecond};
 use vexide::{prelude::Compete, time::sleep};
 
 use crate::robot::Robot;
@@ -19,13 +20,18 @@ impl Compete for Robot {
 
 		loop {
 			if let Ok(controller) = self.controller.state() {
-				// Set all wheels to the angle of right stick for testing
-				let right_y = controller.right_stick.y();
+				// Drive towards position of the left stick
+				let left_y = controller.left_stick.y();
+				let left_x = controller.left_stick.x();
+				let heading = Vec2::new(left_y, -left_x);
+
+				// Turn based on right stick
 				let right_x = controller.right_stick.x();
+				let turn: AngularVelocity<f64> = 180.0 * DegreesPerSecond * -right_x;
 
 				self.drivetrain
 					.model
-					.drive_vector(Vec2::new(right_x, right_y), 0.0);
+					.drive_vector(heading, turn.canonical());
 			} else {
 				eprintln!("Warning: controller disconnect");
 			}

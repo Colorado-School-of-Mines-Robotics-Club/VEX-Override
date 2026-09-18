@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, f64::consts::FRAC_PI_2};
 
 use evian::{
 	drivetrain::model::DrivetrainModel,
@@ -37,7 +37,8 @@ impl Holonomic for DifferentalSwerve {
 			let cross = Vec2::new(
 				position.y.canonical() * turn,
 				-position.x.canonical() * turn,
-			);
+			)
+			.rotated(FRAC_PI_2);
 
 			let vec = vector + cross;
 

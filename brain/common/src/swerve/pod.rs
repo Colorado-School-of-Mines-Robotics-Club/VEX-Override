@@ -36,7 +36,7 @@ pub struct SwervePod {
 }
 
 // const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
-const TURN_PID: AngularPid = AngularPid::new(5.0, 0.0, 0.2, None);
+const TURN_PID: AngularPid = AngularPid::new(30.0, 1.0, 2.5, None);
 const WHEEL_RADIUS: Length = <Inches as One<f64, _>>::ONE.mul_scalar(2.75 / 2.0);
 const LINEAR_GEAR_RATIO: f64 = 1.0;
 const ANGULAR_GEAR_RATIO: f64 = 0.5;
@@ -80,7 +80,7 @@ impl SwervePod {
 		let mut timer = Instant::now();
 
 		loop {
-			// Use PID with the current wheel heading and desired heading
+			// Get the current wheel heading measurement and the desired one
 			let angle = if let Ok(a) = inner.rotation.value() {
 				a
 			} else {
@@ -90,11 +90,19 @@ impl SwervePod {
 				);
 				0
 			};
+			sleep(Duration::from_millis(100)).await;
 			let angle =
 				Angle::from_degrees((angle + inner.analog_offset % 4096) as f64 / 4096.0 * 360.0);
-			let target_heading = pod.target_heading.get().wrapped_half();
+			let mut target_heading = pod.target_heading.get().wrapped_half();
 
-			let turn = inner
+			// Optimize the path to the target heading (check if it would be faster to go to target + 180.0 and drive backwards)
+			let flipped = (angle - target_heading).wrapped_half().abs() > Angle::from_degrees(90.0);
+			if flipped {
+				target_heading += Angle::from_degrees(180.0);
+			}
+
+			// Feed current and desired angle into PID
+			let mut turn = inner
 				.turn_pid
 				.update(angle, target_heading, timer.elapsed());
 
@@ -109,8 +117,18 @@ impl SwervePod {
 			// 		.linear_pid
 			// 		.update(current_speed.abs(), target_speed, timer.elapsed());
 
+			// Get the desired speed
 			let linear = pod.target_speed.get().to::<MetersPerSecond>() / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
 			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
+			let linear = if flipped { -linear } else { linear };
+
+			// Use cosine compensation (if we are at an incorrect angle, drive slower)
+			let linear = linear * (angle - target_heading).cos();
+
+			// If we don't want to move, just don't bother turning the wheel
+			if linear < 1.0e-6 {
+				turn = 0.0;
+			}
 
 			_ = inner
 				.motor_a

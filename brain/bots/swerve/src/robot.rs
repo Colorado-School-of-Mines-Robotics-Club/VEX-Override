@@ -4,6 +4,7 @@ use common::{
 };
 use coprocessor::vexide::CoprocessorSmartPort;
 use evian::{math::Vec2, prelude::*};
+use shrewnit::{Inches, Meters};
 use vexide::prelude::*;
 use vexide_motorgroup::MotorGroup;
 
@@ -33,36 +34,36 @@ impl Robot {
 							Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
 							Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 							AdiAnalogIn::new(peripherals.adi_e),
-							0,
+							2199,
 						),
-						Vec2::default(),
+						Vec2::new(5.75 * Inches, -4.5 * Inches),
 					),
 					(
 						SwervePod::new(
 							Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
 							Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
 							AdiAnalogIn::new(peripherals.adi_f),
-							0,
+							1130,
 						),
-						Vec2::default(),
+						Vec2::new(5.75 * Inches, 4.5 * Inches),
 					),
 					(
 						SwervePod::new(
 							Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 							Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
 							AdiAnalogIn::new(peripherals.adi_h),
-							0,
+							1114,
 						),
-						Vec2::default(),
+						Vec2::new(-5.75 * Inches, 4.5 * Inches),
 					),
 					(
 						SwervePod::new(
 							Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
 							Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
 							AdiAnalogIn::new(peripherals.adi_g),
-							0,
+							2016,
 						),
-						Vec2::default(),
+						Vec2::new(-5.75 * Inches, -4.5 * Inches),
 					),
 				]),
 				(),

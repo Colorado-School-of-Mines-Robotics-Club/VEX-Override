@@ -17,6 +17,7 @@ impl std::ops::Not for LicensePlate {
 	}
 }
 
+#[derive(Debug)]
 pub struct AdiLicensePlate {
 	pub port: AdiDigitalIn,
 	pub high_state: LicensePlate,
