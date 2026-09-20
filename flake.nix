@@ -45,6 +45,7 @@
                         evcxr
                         cargo-watch
                         cargo-nextest
+                        teamtype
                         # Vex brain development
                         cargo-v5
                         # Display development

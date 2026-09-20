@@ -1,5 +1,7 @@
 mod compete;
+mod dr4b;
 mod robot;
+mod top_lift;
 
 use vexide::prelude::*;
 

@@ -17,4 +17,5 @@ shrewnit.workspace = true
 vexide-motorgroup.workspace = true
 common = { path = "../../common" }
 coprocessor = { path = "../../coprocessor" }
+futures-lite.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

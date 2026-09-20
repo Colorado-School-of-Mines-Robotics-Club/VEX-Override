@@ -1,4 +1,4 @@
-use std::{convert::Infallible, f64::consts::FRAC_PI_2};
+use std::{cell::RefCell, convert::Infallible, f64::consts::FRAC_PI_2, rc::Rc, sync::RwLock};
 
 use evian::{
 	drivetrain::model::DrivetrainModel,
@@ -6,12 +6,14 @@ use evian::{
 	prelude::Holonomic,
 };
 use shrewnit::{Length, LinearVelocity};
+use vexide::smart::imu::InertialSensor;
 
 use crate::swerve::pod::SwervePod;
 
 #[derive(Debug)]
 pub struct DifferentalSwerve {
 	pods: [(SwervePod, Vec2<Length>); 4],
+	imu: Rc<RefCell<InertialSensor>>,
 }
 
 impl DifferentalSwerve {
@@ -21,8 +23,8 @@ impl DifferentalSwerve {
 	///
 	/// Order of the swerve pods should not matter, so long as the wheel location
 	/// vector is correct.
-	pub fn new(pods: [(SwervePod, Vec2<Length>); 4]) -> Self {
-		Self { pods }
+	pub fn new(pods: [(SwervePod, Vec2<Length>); 4], imu: Rc<RefCell<InertialSensor>>) -> Self {
+		Self { pods, imu }
 	}
 }
 
