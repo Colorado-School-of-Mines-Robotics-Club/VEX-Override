@@ -38,6 +38,8 @@ impl Holonomic for DifferentalSwerve {
 				position.y.canonical() * turn,
 				-position.x.canonical() * turn,
 			)
+			// The wheels define 0deg as +y in relation to the robot, so we need to rotate this 90deg
+			// This should probably be fixed instead by defining 0deg as +x (how math actually works)
 			.rotated(FRAC_PI_2);
 
 			let vec = vector + cross;
