@@ -36,7 +36,7 @@ pub struct SwervePod {
 }
 
 // const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
-const TURN_PID: AngularPid = AngularPid::new(30.0, 1.0, 2.5, None);
+const TURN_PID: AngularPid = AngularPid::new(50.0, 1.0, 5.0, None);
 const WHEEL_RADIUS: Length = <Inches as One<f64, _>>::ONE.mul_scalar(2.75 / 2.0);
 const LINEAR_GEAR_RATIO: f64 = 1.0;
 const ANGULAR_GEAR_RATIO: f64 = 0.5;

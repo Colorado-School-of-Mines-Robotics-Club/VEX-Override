@@ -44,6 +44,8 @@ impl Holonomic for DifferentalSwerve {
 			// This should probably be fixed instead by defining 0deg as +x (how math actually works)
 			.rotated(FRAC_PI_2);
 
+			let vector =
+				vector.rotated(self.imu.borrow().heading().unwrap_or_default().as_radians());
 			let vec = vector + cross;
 
 			pod.set_heading(Angle::atan2(vec.y, vec.x));

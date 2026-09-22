@@ -1,0 +1,11 @@
+arena_width = 1200.0
+arena_height = 1200.0
+
+n_beams = 500
+
+[mcl]
+n_particles = 100
+gaussian_stdev = 1.0
+gaussian_factor = 1.0
+xy_noise = 1.0
+theta_noise = 2.0

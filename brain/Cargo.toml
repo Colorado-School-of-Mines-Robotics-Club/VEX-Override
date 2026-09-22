@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["common", "bots/swerve", "coprocessor", "display", "display/testing"]
+members = ["common", "bots/swerve", "coprocessor", "display", "display/testing", "mcl"]
 
 [workspace.dependencies]
 # Vexide (and vex-related deps)

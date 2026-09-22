@@ -1,7 +1,10 @@
+#![feature(clamp_magnitude)]
+
+mod autons;
 mod compete;
 mod dr4b;
+mod intake;
 mod robot;
-mod top_lift;
 
 use vexide::prelude::*;
 

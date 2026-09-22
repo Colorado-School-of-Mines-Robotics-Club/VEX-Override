@@ -11,7 +11,7 @@ pub struct LidarMeasurement {
 	pub quality: u8,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct OtosPose {
 	pub x: Length,
 	pub y: Length,

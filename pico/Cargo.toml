@@ -37,3 +37,7 @@ embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 default = ["usb"]
 usb = ["dep:embassy-usb", "dep:defmt-embassy-usbserial"]
 probe = ["dep:defmt-rtt"]
+
+[profile.release]
+strip = true
+lto = true

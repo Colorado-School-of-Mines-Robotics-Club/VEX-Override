@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, sync::RwLock};
+use std::{cell::RefCell, rc::Rc};
 
 use common::{
 	license_plate::{AdiLicensePlate, LicensePlate},
@@ -10,16 +10,14 @@ use shrewnit::Inches;
 use vexide::prelude::*;
 use vexide_motorgroup::MotorGroup;
 
-use crate::{dr4b::Dr4bLift, top_lift::TopLift};
+use crate::{dr4b::Dr4bLift, intake::Intake};
 
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Robot {
 	pub drivetrain: Drivetrain<DifferentalSwerve, ()>,
 	pub lift: Dr4bLift,
-	pub top_lift: TopLift,
-	// pub bottom_intake: MotorGroup<[Motor; 2]>,
-	// pub top_intake: Motor,
+	pub intake: Intake,
 	pub controller: Controller,
 	pub copro: CoprocessorSmartPort,
 	pub imu: Rc<RefCell<InertialSensor>>,
@@ -37,19 +35,40 @@ impl Robot {
 
 		// Setup DR4B
 		let lift = Dr4bLift::new(
+			// DR4B left & right
 			Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
 			Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
+			// Grabber lift
+			Motor::new_exp(peripherals.port_13, Direction::Reverse),
+			// Grabber rotate
+			Motor::new_exp(peripherals.port_12, Direction::Forward),
 		);
 
 		Robot {
+			// convention:
+			// a: top gear
+			// b: bottom gear
+
+			// motors:
+			// right front a: 4
+			// right front b: 3
+
+			// right back a: 5
+			// right back b: 2
+
+			// left front a: 7
+			// left front b: 6
+
+			// left back a: 8
+			// left back b: 9
 			drivetrain: Drivetrain::new(
 				DifferentalSwerve::new(
 					[
 						// TODO stop doing 0.0 for the wheel positions
 						(
 							SwervePod::new(
+								Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
-								Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_e),
 								2199,
 							),
@@ -58,7 +77,7 @@ impl Robot {
 						(
 							SwervePod::new(
 								Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
-								Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
+								Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_f),
 								1130,
 							),
@@ -66,8 +85,8 @@ impl Robot {
 						),
 						(
 							SwervePod::new(
-								Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
+								Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_h),
 								1114,
 							),
@@ -88,10 +107,11 @@ impl Robot {
 				(),
 			),
 			lift,
-			top_lift: TopLift::new(
-				Motor::new_exp(peripherals.port_12, Direction::Forward),
-				Motor::new_exp(peripherals.port_13, Direction::Forward),
-			),
+			intake: Intake {
+				roller_motor: Motor::new(peripherals.port_18, Gearset::Blue, Direction::Forward),
+				top_motor: Motor::new_exp(peripherals.port_14, Direction::Reverse),
+				bottom_motor: Motor::new_exp(peripherals.port_17, Direction::Forward),
+			},
 
 			// bottom_intake: MotorGroup::new([
 			// 	Motor::new_exp(peripherals.port_17, Direction::Forward),
