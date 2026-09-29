@@ -3,8 +3,8 @@ use defmt::{info, warn};
 use embassy_futures::select::{Either, select};
 use embassy_rp::uart::{Async, BufferedUartRx, UartTx};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
-use embassy_time::{Duration, Instant, Timer};
-use embedded_io_async::{BufRead as _, Read as _, ReadReady};
+use embassy_time::{Duration, Timer};
+use embedded_io_async::{BufRead as _, Read as _};
 
 use rplidar::protocol::{
 	BUFFER_SIZE, ParsingState, Request as _, Response, ResponseDescriptor, ResponseType,
@@ -12,6 +12,8 @@ use rplidar::protocol::{
 	reset::ResetRequest,
 	scan::{ScanRequest, ScanResponse},
 };
+
+use crate::tasks::blinker::{BlinkStatusUpdate, STATUS_UPDATES};
 
 const MEASUREMENT_COUNT: usize = 520; // Approximately the highest amount before a new scan
 pub static LIDAR_MEASUREMENTS: Channel<CriticalSectionRawMutex, ScanResponse, MEASUREMENT_COUNT> =
@@ -98,6 +100,8 @@ pub async fn lidar_task(mut uart_tx: UartTx<'static, Async>, mut uart_rx: Buffer
 
 	// Loop infinitely, if something goes wrong then just `continue 'outer` and it all resets
 	'outer: loop {
+		STATUS_UPDATES.send(BlinkStatusUpdate::Lidar(false)).await;
+
 		// Reset the lidar to make sure we're in a consistent state
 		let len = ResetRequest.serialize(&mut buf);
 		_ = uart_tx.write(&buf[..len]).await;
@@ -183,8 +187,8 @@ pub async fn lidar_task(mut uart_tx: UartTx<'static, Async>, mut uart_rx: Buffer
 		}
 
 		info!("Starting to read LIDAR data");
+		STATUS_UPDATES.send(BlinkStatusUpdate::Lidar(true)).await;
 		let mut errors = 0;
-		let mut start = Instant::now();
 		let mut channel_filled = false;
 		loop {
 			// Read response with a timeout to catch if we get disconnected or LIDAR dies or something
@@ -239,12 +243,6 @@ pub async fn lidar_task(mut uart_tx: UartTx<'static, Async>, mut uart_rx: Buffer
 					}
 					_ => (),
 				}
-			}
-
-			// Print lidar measurements every so often
-			if start.elapsed() > Duration::from_secs(1) {
-				info!("Lidar: {:?}", data);
-				start = Instant::now();
 			}
 		}
 	}

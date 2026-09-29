@@ -9,7 +9,7 @@ mod utils;
 use crate::tasks::{
 	blinker::blinker_task, brain::brain_rx, leds::leds_task, lidar::lidar_task, otos::otos_task,
 };
-use defmt::*;
+use defmt::{debug, unwrap};
 use embassy_executor::Spawner;
 use embassy_rp::{
 	clocks::ClockConfig,
@@ -18,12 +18,9 @@ use embassy_rp::{
 	rom_data::reset_to_usb_boot,
 	watchdog::{ResetReason, Watchdog},
 };
-#[cfg(feature = "usb")]
-use embassy_rp::{peripherals::USB, usb};
 use embassy_time::{Duration, Ticker};
 use gpio::Input;
 
-#[cfg(feature = "probe")]
 use defmt_rtt as _;
 use panic_probe as _;
 
@@ -56,13 +53,6 @@ async fn main(spawner: Spawner) {
 		secondary_bootsel(p.button),
 		watchdog_task(p.watchdog, p.led2),
 		lidar_task(p.lidar_uart.0, p.lidar_uart.1)
-	);
-	#[cfg(feature = "usb")]
-	spawn_tasks!(
-		spawner;
-		defmt_usb(p.usb)
-			//,
-		//pinger()
 	);
 }
 
@@ -101,18 +91,18 @@ async fn pinger() {
 	}
 }
 
-#[embassy_executor::task]
-#[cfg(feature = "usb")]
-async fn defmt_usb(driver: usb::Driver<'static, USB>) {
-	const USB_CONFIG: embassy_usb::Config<'static> = {
-		let mut c = embassy_usb::Config::new(0x1209, 0xA5A5); // pid.codes unused PID, unregistered
-		c.serial_number = Some("defmt");
-		c.max_packet_size_0 = 64;
-		c.composite_with_iads = true;
-		c.device_class = 0xEF;
-		c.device_sub_class = 0x02;
-		c.device_protocol = 0x01;
-		c
-	};
-	defmt_embassy_usbserial::run(driver, USB_CONFIG).await;
-}
+// #[embassy_executor::task]
+// #[cfg(feature = "usb")]
+// async fn defmt_usb(driver: usb::Driver<'static, USB>) {
+// 	const USB_CONFIG: embassy_usb::Config<'static> = {
+// 		let mut c = embassy_usb::Config::new(0x1209, 0xA5A5); // pid.codes unused PID, unregistered
+// 		c.serial_number = Some("defmt");
+// 		c.max_packet_size_0 = 64;
+// 		c.composite_with_iads = true;
+// 		c.device_class = 0xEF;
+// 		c.device_sub_class = 0x02;
+// 		c.device_protocol = 0x01;
+// 		c
+// 	};
+// 	defmt_embassy_usbserial::run(driver, USB_CONFIG).await;
+// }

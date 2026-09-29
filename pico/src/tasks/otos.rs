@@ -11,7 +11,11 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal}
 use embassy_time::{Duration, Ticker};
 use embedded_rpc::RpcService;
 
-use crate::{i2c_regs, peripherals::OtosI2C};
+use crate::{
+	i2c_regs,
+	peripherals::OtosI2C,
+	tasks::blinker::{BlinkStatusUpdate, STATUS_UPDATES},
+};
 
 // https://github.com/sparkfun/SparkFun_Optical_Tracking_Odometry_Sensor/blob/main/Firmware/OTOS_Register_Map.pdf
 i2c_regs!(
@@ -257,8 +261,10 @@ async fn calibrate<'a>(i2c: &mut I2c<'a, OtosI2C, i2c::Async>) -> Result<(), i2c
 }
 
 async fn wait_for_otos<'a>(i2c: &mut I2c<'a, OtosI2C, i2c::Async>) {
+	STATUS_UPDATES.send(BlinkStatusUpdate::Otos(false)).await;
 	let mut buf = 0;
 	let mut ticker = Ticker::every(Duration::from_secs(1));
+
 	loop {
 		if let Err(e) = i2c
 			.write_read_async(ADDR, [PRODUCT_ID], core::slice::from_mut(&mut buf))
@@ -279,6 +285,7 @@ async fn wait_for_otos<'a>(i2c: &mut I2c<'a, OtosI2C, i2c::Async>) {
 		}
 
 		info!("OTOS sensor successfully connected!");
+		STATUS_UPDATES.send(BlinkStatusUpdate::Otos(true)).await;
 		return;
 	}
 }

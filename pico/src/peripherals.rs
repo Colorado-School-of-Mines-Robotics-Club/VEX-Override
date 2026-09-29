@@ -5,7 +5,6 @@ use embassy_rp::{
 	peripherals::*,
 	pio::{self, Pio, StateMachine},
 	uart::{self, Async, BufferedUartRx, DataBits, Parity, StopBits, Uart, UartTx},
-	usb,
 	watchdog::{self, Watchdog},
 };
 use static_cell::StaticCell;
@@ -40,14 +39,9 @@ bind_interrupts!(pub struct Irq {
 		dma::InterruptHandler<LidarUARTRxDMA>;
 	I2C0_IRQ => i2c::InterruptHandler<OtosI2C>;
 	PIO0_IRQ_0 => pio::InterruptHandler<BlinkerPIO>;
-	#[cfg(feature = "usb")]
-	USBCTRL_IRQ => usb::InterruptHandler<USB>;
 });
 
 pub struct CoproPeripherals<'a> {
-	/// USB for serial output (logging)
-	#[cfg(feature = "usb")]
-	pub usb: usb::Driver<'a, USB>,
 	/// Watchdog timer to detect and reset on stalls
 	pub watchdog: watchdog::Watchdog,
 	/// Bottom LED
@@ -123,8 +117,6 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 
 	// Configure the rest
 	CoproPeripherals {
-		#[cfg(feature = "usb")]
-		usb: usb::Driver::new(p.USB, Irq),
 		watchdog: Watchdog::new(p.WATCHDOG),
 		led2: Output::new(p.PIN_3, Level::Low),
 		button: Input::new(p.PIN_12, Pull::Up),
