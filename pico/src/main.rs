@@ -1,13 +1,15 @@
 #![no_std]
 #![no_main]
 
+mod i2c;
 mod peripherals;
 mod pio;
 mod tasks;
 mod utils;
 
 use crate::tasks::{
-	blinker::blinker_task, brain::brain_rx, leds::leds_task, lidar::lidar_task, otos::otos_task,
+	blinker::blinker_task, brain::brain_rx, encoders::encoders_task, leds::leds_task,
+	lidar::lidar_task, otos::otos_task,
 };
 use defmt::{debug, unwrap};
 use embassy_executor::Spawner;
@@ -52,7 +54,8 @@ async fn main(spawner: Spawner) {
 		leds_task(p.leds_sm, p.leds_dma),
 		secondary_bootsel(p.button),
 		watchdog_task(p.watchdog, p.led2),
-		lidar_task(p.lidar_uart.0, p.lidar_uart.1)
+		lidar_task(p.lidar_uart.0, p.lidar_uart.1),
+		encoders_task(p.muxer)
 	);
 }
 

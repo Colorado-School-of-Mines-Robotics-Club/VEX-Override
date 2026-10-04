@@ -1,11 +1,15 @@
 #[macro_export]
 macro_rules! i2c_regs {
-	($addr:literal; $($name:ident: $reg_addr:expr),+) => {
+	($addr:literal; $(
+		// $(#[$attr:meta])*
+		$name:ident: $reg_addr:expr
+	),+$(,)?) => {
 		#[allow(unused)]
 		pub const ADDR: u8 = $addr;
 
 		$(
 			#[allow(unused)]
+			// $(#[$attr])*
 			pub const $name: u8 = $reg_addr;
 		)+
 

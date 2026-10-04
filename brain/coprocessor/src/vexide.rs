@@ -1,8 +1,13 @@
 use std::{
-	cell::Cell, collections::VecDeque, io::Write as _, rc::Rc, sync::{
+	cell::Cell,
+	collections::VecDeque,
+	io::Write as _,
+	rc::Rc,
+	sync::{
 		Arc,
 		mpsc::{Receiver, Sender},
-	}, time::Duration,
+	},
+	time::Duration,
 };
 
 use cobs::{CobsDecoderOwned, CobsEncoder};
@@ -14,6 +19,7 @@ use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosLength, OtosPose, Oto
 #[derive(Clone, Debug)]
 pub struct CoprocessorSmartPort {
 	latest_otos: Rc<Cell<OtosPose>>,
+	latest_encoders: Rc<[Cell<u16>; 4]>,
 	requests: Sender<CoproRequest>,
 	pub lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
 	_task: Rc<Task<()>>,
@@ -24,16 +30,19 @@ impl CoprocessorSmartPort {
 		let (req_send, req_recv) = std::sync::mpsc::channel();
 		let lidar: Arc<RwLock<VecDeque<LidarMeasurement>>> = Default::default();
 		let latest_otos = Rc::new(Cell::new(OtosPose::default()));
+		let latest_encoders = Rc::new(std::array::repeat(Cell::new(0)));
 		Self {
 			_task: Rc::new(vexide::task::spawn(Self::task(
 				SerialPort::open(port, 921600).await,
 				req_recv,
 				lidar.clone(),
-				latest_otos.clone()
+				latest_otos.clone(),
+				latest_encoders.clone(),
 			))),
 			requests: req_send,
 			lidar,
-			latest_otos
+			latest_otos,
+			latest_encoders,
 		}
 	}
 
@@ -43,6 +52,13 @@ impl CoprocessorSmartPort {
 
 	pub fn get_latest_otos(&self) -> OtosPose {
 		self.latest_otos.get()
+	}
+
+	pub fn get_encoder(&self, encoder: usize) -> u16 {
+		if encoder > self.latest_encoders.len() {
+			panic!("Encoder {encoder} does not exist!");
+		}
+		self.latest_encoders[encoder].get()
 	}
 
 	pub fn set_otos_config(&self, offset: OtosPose, scalars: OtosScalars) {
@@ -59,7 +75,8 @@ impl CoprocessorSmartPort {
 		mut port: SerialPort,
 		requests: Receiver<CoproRequest>,
 		lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
-		otos: Rc<Cell<OtosPose>>
+		otos: Rc<Cell<OtosPose>>,
+		encoders: Rc<[Cell<u16>; 4]>,
 	) {
 		let mut decoder = CobsDecoderOwned::new(1024);
 		loop {
@@ -87,11 +104,19 @@ impl CoprocessorSmartPort {
 								// First byte is stats
 								// Next is position
 								otos.replace(OtosPose {
-									x: u16::from_le_bytes(decoded[2..4].try_into().unwrap()) as f64 * OtosLength,
-									y: u16::from_le_bytes(decoded[4..6].try_into().unwrap()) as f64 * OtosLength,
-									heading: u16::from_le_bytes(decoded[6..8].try_into().unwrap()) as f64 * OtosAngle
+									x: u16::from_le_bytes(decoded[2..4].try_into().unwrap()) as f64
+										* OtosLength,
+									y: u16::from_le_bytes(decoded[4..6].try_into().unwrap()) as f64
+										* OtosLength,
+									heading: u16::from_le_bytes(decoded[6..8].try_into().unwrap())
+										as f64 * OtosAngle,
 								});
-							},
+							}
+							b'a' => {
+								// One u16 is sent, upper 4 bits are the encoder index, rest is value
+								let data = u16::from_le_bytes(decoded[1..3].try_into().unwrap());
+								encoders[(data >> 12) as usize].replace(data & 0x0FFF);
+							}
 							b'r' => {
 								// Reuse decoder buffer for encoding, since we don't need to read the decoded message anymore
 								let mut encoder = CobsEncoder::new(decoder.dest_mut());

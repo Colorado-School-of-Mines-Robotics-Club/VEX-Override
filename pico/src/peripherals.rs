@@ -9,10 +9,14 @@ use embassy_rp::{
 };
 use static_cell::StaticCell;
 
-use crate::pio::{blinker::setup_blinker_sm, ws2812b::setup_ws2812b_sm};
+use crate::{
+	i2c::muxer::I2cMuxer,
+	pio::{blinker::setup_blinker_sm, ws2812b::setup_ws2812b_sm},
+};
 
 // Define aliases for the peripheral types to reduce duplication
 pub type OtosI2C = I2C0;
+pub type MuxerI2C = I2C1;
 pub type BrainUART = UART0;
 pub type BrainUARTTxDMA = DMA_CH0;
 pub type BrainUARTRxDMA = DMA_CH1;
@@ -38,6 +42,7 @@ bind_interrupts!(pub struct Irq {
 		dma::InterruptHandler<LidarUARTTxDMA>,
 		dma::InterruptHandler<LidarUARTRxDMA>;
 	I2C0_IRQ => i2c::InterruptHandler<OtosI2C>;
+	I2C1_IRQ => i2c::InterruptHandler<MuxerI2C>;
 	PIO0_IRQ_0 => pio::InterruptHandler<BlinkerPIO>;
 });
 
@@ -50,6 +55,8 @@ pub struct CoproPeripherals<'a> {
 	pub button: Input<'a>,
 	/// OTOS over I2C
 	pub otos: I2c<'a, OtosI2C, i2c::Async>,
+	/// Muxer over I2C
+	pub muxer: I2cMuxer<'a, MuxerI2C>,
 	/// RS-485 tranciever UART
 	pub brain_uart: Uart<'a, uart::Async>,
 	/// RS-485 enable pin, High = Transmit, Low = Recieve
@@ -127,6 +134,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 			cfg.frequency = 1_000_000;
 			cfg
 		}),
+		muxer: I2cMuxer::new(p.I2C1, p.PIN_10, p.PIN_11, Irq),
 		brain_enable_pin: Output::new(p.PIN_14, Level::Low),
 		brain_uart: Uart::new(p.UART0, p.PIN_0, p.PIN_1, Irq, p.DMA_CH0, p.DMA_CH1, {
 			// 921600 8n1 UART for brain communication

@@ -1,7 +1,7 @@
 use cobs::CobsEncoder;
 use embassy_futures::{
 	join::join,
-	select::{Either3, select3},
+	select::{Either4, select_array, select4},
 };
 use embassy_rp::{
 	gpio::Output,
@@ -11,6 +11,7 @@ use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
 
 use crate::tasks::{
+	encoders::ANGLES,
 	lidar::LIDAR_MEASUREMENTS,
 	otos::{LATEST_READINGS, OtosScalars},
 };
@@ -56,15 +57,18 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 	let cobs_buf = COBS_BUFFER.init([0u8; _]);
 
 	loop {
-		match select3(
+		match select4(
 			Timer::after(Duration::from_millis(250)),
 			LIDAR_MEASUREMENTS.receive(),
 			LATEST_READINGS.wait(),
+			select_array(core::array::from_fn::<_, { ANGLES.len() }, _>(|i| {
+				ANGLES[i].wait()
+			})),
 		)
 		.await
 		{
 			// Ping for updates from brain
-			Either3::First(_) => {
+			Either4::First(_) => {
 				_ = uart.write(&[0x02, b'r', 0x00]).await;
 				let mut cursor = 0;
 				loop {
@@ -115,7 +119,7 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 				todo!()
 			}
 			// Send lidar
-			Either3::Second(mut measurement) => {
+			Either4::Second(mut measurement) => {
 				// Encode message
 				let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
 				_ = cobs.push(b"l"); // Todo handle errors
@@ -140,10 +144,20 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 				_ = uart.write(&cobs_buf[..=len]).await;
 			}
 			// Send OTOS
-			Either3::Third(data) => {
+			Either4::Third(data) => {
 				let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
 				_ = cobs.push(b"o");
 				_ = cobs.push(&data);
+				let len = cobs.finalize();
+				cobs_buf[len] = 0x00;
+				_ = uart.write(&cobs_buf[..=len]).await;
+			}
+			Either4::Fourth((angle, i)) => {
+				let data = angle | ((i as u16) << 12);
+
+				let mut cobs = CobsEncoder::new(&mut cobs_buf[..]);
+				_ = cobs.push(b"a");
+				_ = cobs.push(&data.to_le_bytes());
 				let len = cobs.finalize();
 				cobs_buf[len] = 0x00;
 				_ = uart.write(&cobs_buf[..=len]).await;

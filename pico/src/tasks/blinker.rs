@@ -1,4 +1,4 @@
-use defmt::{dbg, debug};
+use defmt::debug;
 use embassy_rp::pio::StateMachine;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 
