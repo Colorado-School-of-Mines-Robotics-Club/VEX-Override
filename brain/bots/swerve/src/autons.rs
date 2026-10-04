@@ -1,5 +1,4 @@
 use std::time::Duration;
-use std::array;
 
 use vexide::time::sleep;
 

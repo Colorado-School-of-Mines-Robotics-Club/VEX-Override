@@ -20,7 +20,6 @@ impl Compete for Robot {
 	async fn autonomous(&mut self) {
 		println!("Autonomous!");
 
-
 		self.lift.zero().await;
 
 		self.lift.set_lift_angle(Angle::from_degrees(180.0));
@@ -28,7 +27,7 @@ impl Compete for Robot {
 		dbg!(self.lift.get_lift_angle().as_degrees());
 		sleep(Duration::from_secs(1000)).await;
 
-		// The following are comments detailing the plan for what the robot will do in the autonomous phase. Implementation has not yet began due to mechani.
+		// The following are comments detailing the plan for what the robot will do in the autonomous phase. The robot will start ___ inches from the corner wall.
 
 			// Robot spins its roller to the team color.
 
@@ -109,6 +108,45 @@ impl Compete for Robot {
 						.set_roller_voltage(Motor::V5_MAX_VOLTAGE * Volts);
 					self.intake.intake_full(0.0 * Volts);
 				}
+
+				// Experimental Code for messing with the elevator and the claw. Not yet tested,
+				// Control Scheme:
+				// B - The entire arm (lift and claw) should fully lower, such that they are in position to grab a pin.
+				// ! - The entire arm should steadily raise while held
+				// ! - The entire arm should steadily lower while held	
+
+				// Note that claw operated using pnuematics, and that the pnuematics are not defined so we are using placeholders.
+				if controller.button_b.is_now_pressed() {
+					let current_angle = self.lift.get_grabber_angle();
+					self.lift.set_lift_angle(Angle::from_degrees(180.0));
+					self.lift.set_grabber_angle(Angle::from_degrees(180.0));
+					sleep(Duration::from_secs(1)).await;
+				}
+
+				if false { // See the unimplemented!
+					let raise_lift = controller.button_r1.is_pressed();
+					let lower_lift = controller.button_r2.is_pressed();
+
+					if controller.button_r1.is_pressed() {
+						let new_angle = self.lift.get_lift_angle() + Angle::from_degrees(0.1);
+						self.lift.set_lift_angle(new_angle);
+
+						let new_angle = self.lift.get_grabber_angle() + Angle::from_degrees(0.1);
+						self.lift.set_grabber_angle(new_angle);
+						
+					} else if controller.button_r2.is_pressed() {
+						let new_angle = self.lift.get_lift_angle() - Angle::from_degrees(0.1);
+						self.lift.set_lift_angle(new_angle);
+
+						let new_angle = self.lift.get_grabber_angle() - Angle::from_degrees(0.1);
+						self.lift.set_grabber_angle(new_angle);
+					}
+					todo!(
+						"Lift control is unfinished: it currently uses placeholder buttons. \
+						Get Tyler to fix & complete the robot's control scheme prior to using this code."
+					);
+				}
+
 			} else {
 				// Log only every so often
 				if i % 200 == 0 {

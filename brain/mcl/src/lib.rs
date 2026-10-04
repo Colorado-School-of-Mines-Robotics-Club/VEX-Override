@@ -71,7 +71,7 @@ impl MCL {
         for offset in offsets {
             for (particle, cumulative_weight) in zip(&self.particles, &cumulative_weights) {
                 if *cumulative_weight >= offset {
-                    new_particles[push_index] = particle.clone();
+                    new_particles[push_index] = *particle;
                     push_index += 1;
                     break;
                 }
