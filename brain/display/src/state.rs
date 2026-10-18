@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, rc::Rc};
+use std::rc::Rc;
 
 use autons::simple::Route;
 use shrewnit::{Angle, AngularVelocity, Length, LinearVelocity};

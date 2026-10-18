@@ -7,7 +7,6 @@ use std::{
 
 use buoyant::{
 	app::{App, Harness as _},
-	event::Event,
 	primitives::Size,
 	render_target::{EmbeddedGraphicsRenderTarget, RenderTarget as _},
 };
@@ -32,7 +31,7 @@ impl TouchStateHandler {
 		Self { touch: None }
 	}
 
-	fn update(&mut self, event: TouchEvent) -> Option<Event> {
+	fn update(&mut self, event: TouchEvent) -> Option<Touch> {
 		let point = TouchPoint::new(event.point.x, event.point.y);
 		match event.state {
 			TouchState::Pressed /* if self.touch.is_none() */ => {
@@ -44,25 +43,25 @@ impl TouchStateHandler {
 				};
 				self.touch = Some(touch.clone());
 
-				Some(Event::Touch(touch))
+				Some(touch)
 			}
 			TouchState::Held => match &mut self.touch {
 				Some(touch) if touch.location != point => {
 					touch.location = point;
 					touch.phase = Phase::Moved;
 
-					Some(Event::Touch(touch.clone()))
+					Some(touch.clone())
 				}
 				_ => None,
 			},
 			TouchState::Released if self.touch.is_some() => {
 				self.touch = None;
-				Some(Event::Touch(Touch {
+				Some(Touch {
 					id: 0,
 					location: point,
 					phase: Phase::Ended,
 					tool: Tool::Finger,
-				}))
+				})
 			}
 			_ => None,
 		}
@@ -151,8 +150,8 @@ impl<R: 'static, const N: usize> RobotUi<R, N> {
 			app.set_time(render_start.duration_since(app_start));
 
 			// Update touch state
-			if let Some(e) = touch_state_handler.update(target.display().touch_status()) {
-				app.send(e);
+			if let Some(touch) = touch_state_handler.update(target.display().touch_status()) {
+				app.send_touch(&touch);
 			}
 
 			// Update app state if necessary
