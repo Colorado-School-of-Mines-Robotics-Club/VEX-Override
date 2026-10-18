@@ -10,9 +10,9 @@ autons = { git = "https://github.com/TymanWasTaken/autons" }
 shrewnit = { git = "https://github.com/Colorado-School-of-Mines-Robotics-Club/shrewnit" }
 vexide-motorgroup = { git = "https://github.com/TymanWasTaken/vexide-motorgroup" }
 # Display
-buoyant = "0.7.0"
+buoyant = "0.8.0-alpha.0"
 embedded-graphics = "0.8.2"
 vexide-embedded-graphics = { git = "https://github.com/TymanWasTaken/vexide-embedded-graphics" }
 # Misc utilities
-bytemuck = { version = "1.25.0", default-features = false, features = ["derive", "min_const_generics", "must_cast"] }
+bytemuck = { version = "1.25.2", default-features = false, features = ["derive", "min_const_generics", "must_cast"] }
 futures-lite = "2.6.1"
