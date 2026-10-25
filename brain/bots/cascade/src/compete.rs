@@ -1,11 +1,15 @@
-use std::{ fmt::Alignment::Left, time::Duration};
+use std::{fmt::Alignment::Left, time::Duration};
 
 use evian::{
-	drivetrain::model::Arcade, math::{Angle, Vec2}, prelude::Holonomic as _,
+	drivetrain::model::Arcade,
+	math::{Angle, Vec2},
+	prelude::Holonomic as _,
 };
 use shrewnit::{AngularVelocity, DegreesPerSecond, RotationsPerMinute, Volts};
 use vexide::{
-	prelude::{Compete, Motor}, smart::motor::BrakeMode, time::sleep,
+	prelude::{Compete, Motor},
+	smart::motor::BrakeMode,
+	time::sleep,
 };
 
 use crate::robot::Robot;
@@ -18,7 +22,7 @@ impl Compete for Robot {
 	async fn autonomous(&mut self) {
 		println!("Autonomous!");
 
-		// This experimental code makes the assumption that the bot starts off facing the rollers, adjustments will need to be made if this is not the case.r 
+		// This experimental code makes the assumption that the bot starts off facing the rollers, adjustments will need to be made if this is not the case.r
 		// Bot starts up and immediately goes for its nearby roller to roll it.
 		// Each bot will need to handle 6 pin halves, 3 pin halves will have to be handled on each goal.
 
@@ -34,7 +38,7 @@ impl Compete for Robot {
 
 		sleep(Duration::from_secs(2)).await;
 
-		_ = self.drivetrain.model.drive_arcade(0.0,  0.5);
+		_ = self.drivetrain.model.drive_arcade(0.0, 0.5);
 
 		sleep(Duration::from_secs(1)).await;
 
@@ -45,12 +49,11 @@ impl Compete for Robot {
 		// The bot then searches for the nearest pin and grabs it, then putting it in the next goal.
 
 		// The bot then repeats the previous step with another goal and pin.aix
-
 	}
 
 	async fn driver(&mut self) {
 		println!("Driver!");
-		
+
 		loop {
 			if let Ok(controller) = self.controller.state() {
 				if controller.button_r1.is_pressed() {
@@ -62,7 +65,10 @@ impl Compete for Robot {
 						_ = motor.brake(BrakeMode::Hold);
 					}
 				} else {
-					_ = self.drivetrain.model.drive_arcade(controller.left_stick.y(), controller.right_stick.x());
+					_ = self
+						.drivetrain
+						.model
+						.drive_arcade(controller.left_stick.y(), controller.right_stick.x());
 				}
 			}
 
