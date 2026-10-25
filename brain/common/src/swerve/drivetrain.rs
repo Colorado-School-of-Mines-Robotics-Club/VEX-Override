@@ -12,7 +12,7 @@ use crate::swerve::pod::SwervePod;
 
 #[derive(Debug)]
 pub struct DifferentalSwerve {
-	pods: [(SwervePod, Vec2<Length>); 4],
+	pub pods: [(SwervePod, Vec2<Length>); 4],
 	imu: Rc<RefCell<InertialSensor>>,
 }
 

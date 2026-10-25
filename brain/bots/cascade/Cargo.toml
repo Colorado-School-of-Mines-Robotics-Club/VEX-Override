@@ -1,0 +1,22 @@
+[package]
+name = "cascade"
+version = "0.1.0"
+edition = "2024"
+
+# These fields configure default behavior for uploads with `cargo v5`.
+[package.metadata.v5]
+upload-strategy = "differential"
+slot = 2
+icon = "cool-x"
+compress = true
+
+[dependencies]
+evian.workspace = true
+vexide.workspace = true
+shrewnit.workspace = true
+vexide-motorgroup.workspace = true
+common = { path = "../../common" }
+coprocessor = { path = "../../coprocessor" }
+futures-lite.workspace = true
+mcl = { path = "../../mcl" }
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

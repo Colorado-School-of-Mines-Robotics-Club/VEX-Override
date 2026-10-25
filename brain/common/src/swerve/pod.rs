@@ -36,7 +36,7 @@ pub struct SwervePod {
 }
 
 // const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
-const TURN_PID: AngularPid = AngularPid::new(50.0, 1.0, 5.0, None);
+const TURN_PID: AngularPid = AngularPid::new(50.0, 10.0, 5.0, None);
 const WHEEL_RADIUS: Length = <Inches as One<f64, _>>::ONE.mul_scalar(2.75 / 2.0);
 const LINEAR_GEAR_RATIO: f64 = 1.0;
 const ANGULAR_GEAR_RATIO: f64 = 0.5;
@@ -121,14 +121,15 @@ impl SwervePod {
 			let linear = pod.target_speed.get().to::<MetersPerSecond>() / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
 			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
 			let linear = if flipped { -linear } else { linear };
+			let linear = 0.0;
 
 			// Use cosine compensation (if we are at an incorrect angle, drive slower)
-			let linear = linear * (angle - target_heading).cos();
+			// let linear = linear * (angle - target_heading).cos();
 
 			// If we don't want to move, just don't bother turning the wheel
-			if linear < 1.0e-6 {
-				turn = 0.0;
-			}
+			// if linear < 1.0e-6 {
+			// 	turn = 0.0;
+			// }
 
 			_ = inner
 				.motor_a

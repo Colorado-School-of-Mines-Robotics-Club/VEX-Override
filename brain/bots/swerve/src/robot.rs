@@ -27,7 +27,7 @@ pub struct Robot {
 impl Robot {
 	pub async fn new(peripherals: Peripherals) -> Self {
 		// Initialize Imu
-		let mut imu = InertialSensor::new(peripherals.port_16);
+		let mut imu = InertialSensor::new(peripherals.port_17);
 		println!("Calibrating IMU...");
 		_ = imu.calibrate().await;
 		println!("IMU calibrated...");
@@ -64,40 +64,43 @@ impl Robot {
 			drivetrain: Drivetrain::new(
 				DifferentalSwerve::new(
 					[
-						// TODO stop doing 0.0 for the wheel positions
 						(
+							// Pod 2
 							SwervePod::new(
 								Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_e),
-								2199,
+								8,
 							),
 							Vec2::new(5.75 * Inches, -4.5 * Inches),
 						),
 						(
+							// Pod 3
 							SwervePod::new(
 								Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_f),
-								1130,
+								2972,
 							),
 							Vec2::new(5.75 * Inches, 4.5 * Inches),
 						),
 						(
+							// Pod 4
 							SwervePod::new(
 								Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_h),
-								1114,
+								2851,
 							),
 							Vec2::new(-5.75 * Inches, 4.5 * Inches),
 						),
 						(
+							// Pod 1
 							SwervePod::new(
 								Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_g),
-								2016,
+								3985,
 							),
 							Vec2::new(-5.75 * Inches, -4.5 * Inches),
 						),
@@ -110,7 +113,7 @@ impl Robot {
 			intake: Intake {
 				roller_motor: Motor::new(peripherals.port_18, Gearset::Blue, Direction::Forward),
 				top_motor: Motor::new_exp(peripherals.port_14, Direction::Reverse),
-				bottom_motor: Motor::new_exp(peripherals.port_17, Direction::Forward),
+				bottom_motor: Motor::new_exp(peripherals.port_16, Direction::Forward),
 			},
 
 			// bottom_intake: MotorGroup::new([

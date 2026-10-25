@@ -20,3 +20,7 @@ coprocessor = { path = "../../coprocessor" }
 futures-lite.workspace = true
 mcl = { path = "../../mcl" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+path = "./pod_angles.rs"
+name = "pod_angles"

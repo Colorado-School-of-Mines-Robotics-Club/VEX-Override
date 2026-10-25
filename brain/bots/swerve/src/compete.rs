@@ -1,4 +1,4 @@
-use std::{ time::Duration};
+use std::time::Duration;
 
 use evian::{
 	math::{Angle, Vec2},
@@ -29,13 +29,13 @@ impl Compete for Robot {
 
 		// The following are comments detailing the plan for what the robot will do in the autonomous phase. The robot will start ___ inches from the corner wall.
 
-			// Robot spins its roller to the team color.
+		// Robot spins its roller to the team color.
 
-			// Robot immediately puts its preload in the nearest red goal.
+		// Robot immediately puts its preload in the nearest red goal.
 
-			// Robot approaches neutral pin and moves it to the same red goal.
+		// Robot approaches neutral pin and moves it to the same red goal.
 
-			// Robot approaches nearby pins on the opposite side and loads another goal with 2 pins.
+		// Robot approaches nearby pins on the opposite side and loads another goal with 2 pins.
 	}
 
 	async fn driver(&mut self) {
@@ -78,13 +78,8 @@ impl Compete for Robot {
 				};
 				self.lift.set_lift_angular_velocity(lift_velocity);
 
-				let grabber_power = if (self.lift.get_grabber_angle() > Angle::from_degrees(160.0))
-					== controller.button_l1.is_pressed()
-				{
-					0.05
-				} else {
-					0.1
-				};
+				let grabber_power =
+					0.3 * (self.lift.get_grabber_angle() + Angle::from_degrees(15.0)).sin() + 0.2;
 				self.lift
 					.set_grabber_voltage(if controller.button_l1.is_pressed() {
 						Motor::EXP_MAX_VOLTAGE * grabber_power * Volts
@@ -104,8 +99,7 @@ impl Compete for Robot {
 					self.intake
 						.set_roller_voltage(Motor::V5_MAX_VOLTAGE * Volts);
 				} else {
-					self.intake
-						.set_roller_voltage(Motor::V5_MAX_VOLTAGE * Volts);
+					self.intake.set_roller_voltage(0.0 * Volts);
 					self.intake.intake_full(0.0 * Volts);
 				}
 
@@ -113,7 +107,7 @@ impl Compete for Robot {
 				// Control Scheme:
 				// B - The entire arm (lift and claw) should fully lower, such that they are in position to grab a pin.
 				// ! - The entire arm should steadily raise while held
-				// ! - The entire arm should steadily lower while held	
+				// ! - The entire arm should steadily lower while held
 
 				// Note that claw operated using pnuematics, and that the pnuematics are not defined so we are using placeholders.
 				if controller.button_b.is_now_pressed() {
@@ -123,7 +117,8 @@ impl Compete for Robot {
 					sleep(Duration::from_secs(1)).await;
 				}
 
-				if false { // See the unimplemented!
+				if false {
+					// See the unimplemented!
 					let raise_lift = controller.button_r1.is_pressed();
 					let lower_lift = controller.button_r2.is_pressed();
 
@@ -133,7 +128,6 @@ impl Compete for Robot {
 
 						let new_angle = self.lift.get_grabber_angle() + Angle::from_degrees(0.1);
 						self.lift.set_grabber_angle(new_angle);
-						
 					} else if controller.button_r2.is_pressed() {
 						let new_angle = self.lift.get_lift_angle() - Angle::from_degrees(0.1);
 						self.lift.set_lift_angle(new_angle);
@@ -146,7 +140,6 @@ impl Compete for Robot {
 						Get Tyler to fix & complete the robot's control scheme prior to using this code."
 					);
 				}
-
 			} else {
 				// Log only every so often
 				if i % 200 == 0 {

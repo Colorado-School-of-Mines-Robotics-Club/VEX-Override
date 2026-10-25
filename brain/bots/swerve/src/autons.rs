@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use vexide::time::sleep;
+use vexide::{controller::Controller, time::sleep};
 
 use crate::robot::Robot;
 
