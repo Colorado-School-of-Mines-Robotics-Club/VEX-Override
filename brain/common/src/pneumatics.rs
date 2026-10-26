@@ -23,6 +23,7 @@ impl std::ops::Not for PneumaticState {
 	}
 }
 
+#[derive(Debug)]
 pub struct AdiPneumatic {
 	port: AdiDigitalOut,
 	high_mode: PneumaticState,
@@ -59,6 +60,7 @@ impl AdiPneumatic {
 			}
 		};
 
+		self.current_state = state;
 		self.port.set_level(level)
 	}
 

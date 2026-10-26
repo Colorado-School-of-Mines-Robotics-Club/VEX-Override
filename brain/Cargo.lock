@@ -70,6 +70,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
 
 [[package]]
+name = "bitter"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2c0e47498147b8c7df046db864c63b6d39c9536e17492d74ec32465421feb38"
+
+[[package]]
 name = "buoyant"
 version = "0.8.0-alpha.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -153,6 +159,7 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "coprocessor",
  "evian",
  "shrewnit",
  "vexide",
@@ -176,6 +183,7 @@ dependencies = [
 name = "coprocessor"
 version = "0.1.0"
 dependencies = [
+ "bitter",
  "bytemuck",
  "bytes",
  "cobs",

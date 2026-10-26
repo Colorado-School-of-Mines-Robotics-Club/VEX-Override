@@ -1,6 +1,7 @@
 #![feature(clamp_magnitude)]
 
 mod autons;
+mod claw;
 mod compete;
 mod dr4b;
 mod intake;

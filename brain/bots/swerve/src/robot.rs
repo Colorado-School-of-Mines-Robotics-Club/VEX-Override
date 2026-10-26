@@ -2,15 +2,19 @@ use std::{cell::RefCell, rc::Rc};
 
 use common::{
 	license_plate::{AdiLicensePlate, LicensePlate},
+	pneumatics::{AdiPneumatic, PneumaticState},
 	swerve::{drivetrain::DifferentalSwerve, pod::SwervePod},
 };
 use coprocessor::vexide::CoprocessorSmartPort;
-use evian::{math::Vec2, prelude::*};
+use evian::{
+	control::loops::AngularPid,
+	math::{Angle, Vec2},
+	prelude::*,
+};
 use shrewnit::Inches;
 use vexide::prelude::*;
-use vexide_motorgroup::MotorGroup;
 
-use crate::{dr4b::Dr4bLift, intake::Intake};
+use crate::{claw::Claw, dr4b::Dr4bLift, intake::Intake};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -22,6 +26,7 @@ pub struct Robot {
 	pub copro: CoprocessorSmartPort,
 	pub imu: Rc<RefCell<InertialSensor>>,
 	pub license_plate: AdiLicensePlate,
+	pub claw: Claw,
 }
 
 impl Robot {
@@ -65,12 +70,24 @@ impl Robot {
 				DifferentalSwerve::new(
 					[
 						(
+							// Pod 1
+							SwervePod::new(
+								Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
+								Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
+								AdiAnalogIn::new(peripherals.adi_g),
+								4015,
+								AngularPid::new(40.0, 0.0, 0.0, None),
+							),
+							Vec2::new(-5.75 * Inches, -4.5 * Inches),
+						),
+						(
 							// Pod 2
 							SwervePod::new(
 								Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_e),
-								8,
+								2042,
+								AngularPid::new(40.0, 0.0, 0.0, None),
 							),
 							Vec2::new(5.75 * Inches, -4.5 * Inches),
 						),
@@ -80,7 +97,8 @@ impl Robot {
 								Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_f),
-								2972,
+								2913,
+								AngularPid::new(40.0, 0.0, 0.0, None),
 							),
 							Vec2::new(5.75 * Inches, 4.5 * Inches),
 						),
@@ -90,19 +108,10 @@ impl Robot {
 								Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_h),
-								2851,
+								798,
+								AngularPid::new(40.0, 0.0, 0.0, None),
 							),
 							Vec2::new(-5.75 * Inches, 4.5 * Inches),
-						),
-						(
-							// Pod 1
-							SwervePod::new(
-								Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
-								Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
-								AdiAnalogIn::new(peripherals.adi_g),
-								3985,
-							),
-							Vec2::new(-5.75 * Inches, -4.5 * Inches),
 						),
 					],
 					imu.clone(),
@@ -115,12 +124,6 @@ impl Robot {
 				top_motor: Motor::new_exp(peripherals.port_14, Direction::Reverse),
 				bottom_motor: Motor::new_exp(peripherals.port_16, Direction::Forward),
 			},
-
-			// bottom_intake: MotorGroup::new([
-			// 	Motor::new_exp(peripherals.port_17, Direction::Forward),
-			// 	Motor::new_exp(peripherals.port_14, Direction::Forward),
-			// ]),
-			// top_intake: Motor::new(peripherals.port_18, Gearset::Blue, Direction::Forward),
 			controller: peripherals.primary_controller,
 			imu,
 			copro: CoprocessorSmartPort::new(peripherals.port_15).await,
@@ -128,6 +131,18 @@ impl Robot {
 				port: AdiDigitalIn::new(peripherals.adi_d),
 				high_state: LicensePlate::Red,
 			},
+			claw: Claw::new(
+				AdiPneumatic::new(
+					peripherals.adi_a,
+					PneumaticState::Extended,
+					PneumaticState::Contracted,
+				),
+				AdiPneumatic::new(
+					peripherals.adi_b,
+					PneumaticState::Extended,
+					PneumaticState::Contracted,
+				),
+			),
 		}
 	}
 }

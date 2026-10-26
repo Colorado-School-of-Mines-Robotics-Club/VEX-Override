@@ -36,8 +36,10 @@ pub struct SwervePod {
 }
 
 // const LINEAR_PID: Pid = Pid::new(0.02, 200.0, 0.0, Some(11.0));
-const TURN_PID: AngularPid = AngularPid::new(50.0, 10.0, 5.0, None);
+// const TURN_PID: AngularPid = AngularPid::new(50.0, 10.0, 5.0, None);
 const WHEEL_RADIUS: Length = <Inches as One<f64, _>>::ONE.mul_scalar(2.75 / 2.0);
+const MAX_SENSOR_READING: u16 = 2u16.pow(12);
+const MAX_SENSOR_READING_FLOAT: f64 = 2u16.pow(12) as f64;
 const LINEAR_GEAR_RATIO: f64 = 1.0;
 const ANGULAR_GEAR_RATIO: f64 = 0.5;
 
@@ -47,7 +49,13 @@ impl SwervePod {
 	/// The offset should be chosen such that when added mod 4096 to the rotation input, zero means the
 	/// wheel is facing directly forward on the robot. Which direction on the wheel is forward does not
 	/// matter, the pod will always choose the closest path to the desired angle.
-	pub fn new(motor_a: Motor, motor_b: Motor, rotation: AdiAnalogIn, analog_offset: u16) -> Self {
+	pub fn new(
+		motor_a: Motor,
+		motor_b: Motor,
+		rotation: AdiAnalogIn,
+		analog_offset: u16,
+		turn_pid: AngularPid,
+	) -> Self {
 		let pod = Self {
 			target_heading: Rc::new(Cell::new(Angle::ZERO)),
 			target_speed: Rc::new(Cell::new(0.0 * MetersPerSecond)),
@@ -60,7 +68,7 @@ impl SwervePod {
 			analog_offset,
 
 			// linear_pid: LINEAR_PID,
-			turn_pid: TURN_PID,
+			turn_pid,
 		};
 
 		vexide::task::spawn(Self::task(pod.clone(), inner)).detach();
@@ -69,7 +77,7 @@ impl SwervePod {
 	}
 
 	pub fn set_heading(&mut self, heading: Angle) {
-		self.target_heading.set(heading);
+		self.target_heading.set(heading - Angle::from_turns(0.25));
 	}
 
 	pub fn set_speed(&mut self, speed: LinearVelocity) {
@@ -90,9 +98,8 @@ impl SwervePod {
 				);
 				0
 			};
-			sleep(Duration::from_millis(100)).await;
 			let angle =
-				Angle::from_degrees((angle + inner.analog_offset % 4096) as f64 / 4096.0 * 360.0);
+				Angle::from_degrees(((angle + inner.analog_offset) % MAX_SENSOR_READING) as f64 / MAX_SENSOR_READING_FLOAT * 360.0);
 			let mut target_heading = pod.target_heading.get().wrapped_half();
 
 			// Optimize the path to the target heading (check if it would be faster to go to target + 180.0 and drive backwards)
@@ -102,7 +109,7 @@ impl SwervePod {
 			}
 
 			// Feed current and desired angle into PID
-			let mut turn = inner
+			let turn = inner
 				.turn_pid
 				.update(angle, target_heading, timer.elapsed());
 
@@ -121,10 +128,10 @@ impl SwervePod {
 			let linear = pod.target_speed.get().to::<MetersPerSecond>() / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
 			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
 			let linear = if flipped { -linear } else { linear };
-			let linear = 0.0;
+			let linear = 0.0; // REMOVE
 
 			// Use cosine compensation (if we are at an incorrect angle, drive slower)
-			// let linear = linear * (angle - target_heading).cos();
+			let linear = linear * (angle - target_heading).cos();
 
 			// If we don't want to move, just don't bother turning the wheel
 			// if linear < 1.0e-6 {

@@ -48,7 +48,7 @@ impl Compete for Robot {
 
 		// The bot then searches for the nearest pin and grabs it, then putting it in the next goal.
 
-		// The bot then repeats the previous step with another goal and pin.aix
+		// The bot then repeats the previous step with another goal and pin.
 	}
 
 	async fn driver(&mut self) {

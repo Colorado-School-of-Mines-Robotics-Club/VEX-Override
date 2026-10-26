@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use evian::math::Angle;
 use vexide::{controller::Controller, time::sleep};
 
 use crate::robot::Robot;
@@ -46,4 +47,12 @@ pub async fn test_mcl(robot: &mut Robot) {
 
 		sleep(Duration::from_millis(1)).await;
 	}
+}
+
+pub async fn test_swerve_turn(robot: &mut Robot) {
+	println!("Testing swerve turn!!1!!!!");
+	robot.drivetrain.model.pods[1]
+		.0
+		.set_heading(Angle::from_degrees(90.0));
+	sleep(Duration::from_secs(10000)).await
 }

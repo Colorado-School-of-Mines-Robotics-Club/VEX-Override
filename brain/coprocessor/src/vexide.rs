@@ -14,11 +14,11 @@ use cobs::{CobsDecoderOwned, CobsEncoder};
 use shrewnit::{Degrees, Millimeters};
 use vexide::{prelude::SerialPort, smart::SmartPort, sync::RwLock, task::Task, time::sleep};
 
-use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosLength, OtosPose, OtosScalars};
+use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosData, OtosLength, OtosPose, OtosScalars};
 
 #[derive(Clone, Debug)]
 pub struct CoprocessorSmartPort {
-	latest_otos: Rc<Cell<OtosPose>>,
+	latest_otos: Rc<Cell<OtosData>>,
 	latest_encoders: Rc<[Cell<u16>; 4]>,
 	requests: Sender<CoproRequest>,
 	pub lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
@@ -26,10 +26,13 @@ pub struct CoprocessorSmartPort {
 }
 
 impl CoprocessorSmartPort {
+	/// Creates a new CoprocessorSmartPort given a port object
+	///
+	/// This will start a background task to continuously load data from the coprocessor.
 	pub async fn new(port: SmartPort) -> Self {
 		let (req_send, req_recv) = std::sync::mpsc::channel();
 		let lidar: Arc<RwLock<VecDeque<LidarMeasurement>>> = Default::default();
-		let latest_otos = Rc::new(Cell::new(OtosPose::default()));
+		let latest_otos = Rc::new(Cell::new(Default::default()));
 		let latest_encoders = Rc::new(std::array::repeat(Cell::new(0)));
 		Self {
 			_task: Rc::new(vexide::task::spawn(Self::task(
@@ -46,14 +49,24 @@ impl CoprocessorSmartPort {
 		}
 	}
 
+	/// Notifies the coprocessor that the OTOS should calibrate (is not guaranteed to send instantly)
 	pub fn calibrate_otos(&self) {
 		_ = self.requests.send(CoproRequest::CalibrateOTOS);
 	}
 
-	pub fn get_latest_otos(&self) -> OtosPose {
+	/// Returns the latest recieved value from the OTOS sensor
+	pub fn get_latest_otos(&self) -> OtosData {
 		self.latest_otos.get()
 	}
 
+	/// Returns the reference-counted value that will update with latest recieved readings
+	pub fn otos(&self) -> Rc<Cell<OtosData>> {
+		self.latest_otos.clone()
+	}
+
+	/// Returns the latest recieved value from one of the i2c magnetic encoders
+	///
+	/// Will panic if you pass an index for a non-existent encoder
 	pub fn get_encoder(&self, encoder: usize) -> u16 {
 		if encoder > self.latest_encoders.len() {
 			panic!("Encoder {encoder} does not exist!");
@@ -75,7 +88,7 @@ impl CoprocessorSmartPort {
 		mut port: SerialPort,
 		requests: Receiver<CoproRequest>,
 		lidar: Arc<RwLock<VecDeque<LidarMeasurement>>>,
-		otos: Rc<Cell<OtosPose>>,
+		otos: Rc<Cell<OtosData>>,
 		encoders: Rc<[Cell<u16>; 4]>,
 	) {
 		let mut decoder = CobsDecoderOwned::new(1024);
@@ -103,14 +116,9 @@ impl CoprocessorSmartPort {
 							b'o' => {
 								// First byte is stats
 								// Next is position
-								otos.replace(OtosPose {
-									x: u16::from_le_bytes(decoded[2..4].try_into().unwrap()) as f64
-										* OtosLength,
-									y: u16::from_le_bytes(decoded[4..6].try_into().unwrap()) as f64
-										* OtosLength,
-									heading: u16::from_le_bytes(decoded[6..8].try_into().unwrap())
-										as f64 * OtosAngle,
-								});
+								if let Some(parsed) = OtosData::parse_from_binary(&decoded[1..]) {
+									otos.replace(parsed);
+								};
 							}
 							b'a' => {
 								// One u16 is sent, upper 4 bits are the encoder index, rest is value

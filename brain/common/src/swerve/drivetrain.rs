@@ -39,13 +39,13 @@ impl Holonomic for DifferentalSwerve {
 			let cross = Vec2::new(
 				position.y.canonical() * turn,
 				-position.x.canonical() * turn,
-			)
-			// The wheels define 0deg as +y in relation to the robot, so we need to rotate this 90deg
-			// This should probably be fixed instead by defining 0deg as +x (how math actually works)
-			.rotated(FRAC_PI_2);
+			);
+			// // The wheels define 0deg as +y in relation to the robot, so we need to rotate this 90deg
+			// // This should probably be fixed instead by defining 0deg as +x (how math actually works)
+			// .rotated(FRAC_PI_2);
 
-			let vector =
-				vector.rotated(self.imu.borrow().heading().unwrap_or_default().as_radians());
+			// let vector =
+			// 	vector.rotated(self.imu.borrow().heading().unwrap_or_default().as_radians());
 			let vec = vector + cross;
 
 			pod.set_heading(Angle::atan2(vec.y, vec.x));

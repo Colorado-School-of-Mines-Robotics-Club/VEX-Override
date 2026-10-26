@@ -152,6 +152,7 @@ pub async fn brain_rx(mut uart: Uart<'static, uart::Async>, mut enable_pin: Outp
 				cobs_buf[len] = 0x00;
 				_ = uart.write(&cobs_buf[..=len]).await;
 			}
+			// Send encoder position
 			Either4::Fourth((angle, i)) => {
 				let data = angle | ((i as u16) << 12);
 
