@@ -2,7 +2,9 @@ mod units;
 pub mod vexide;
 
 use bitter::{BitReader, LittleEndianReader};
-use shrewnit::{Angle, AngularAcceleration, AngularVelocity, Length, LinearAcceleration, LinearVelocity};
+use shrewnit::{
+	Angle, AngularAcceleration, AngularVelocity, Length, LinearAcceleration, LinearVelocity,
+};
 pub use units::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -20,12 +22,12 @@ pub const OTOS_STATUS_ERROR_LSM: u8 = 1 << 7;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OtosData {
 	pub status: u8,
-    pub position: OtosPose,
-    pub velocity: OtosVelocity,
-    pub acceleration: OtosAcceleration,
-    pub position_stddev: OtosPose,
-    pub velocity_stddev: OtosVelocity,
-    pub acceleration_stddev: OtosAcceleration,
+	pub position: OtosPose,
+	pub velocity: OtosVelocity,
+	pub acceleration: OtosAcceleration,
+	pub position_stddev: OtosPose,
+	pub velocity_stddev: OtosVelocity,
+	pub acceleration_stddev: OtosAcceleration,
 }
 
 impl OtosData {
@@ -36,33 +38,33 @@ impl OtosData {
 			position: OtosPose {
 				x: reader.read_i16()? as f64 * OtosLength,
 				y: reader.read_i16()? as f64 * OtosLength,
-				heading: reader.read_i16()? as f64 * OtosAngle
+				heading: reader.read_i16()? as f64 * OtosAngle,
 			},
 			velocity: OtosVelocity {
 				x: reader.read_i16()? as f64 * OtosLinearVelocity,
 				y: reader.read_i16()? as f64 * OtosLinearVelocity,
-				heading: reader.read_i16()? as f64 * OtosAngularVelocity
+				heading: reader.read_i16()? as f64 * OtosAngularVelocity,
 			},
 			acceleration: OtosAcceleration {
 				x: reader.read_i16()? as f64 * OtosLinearAcceleration,
 				y: reader.read_i16()? as f64 * OtosLinearAcceleration,
-				heading: reader.read_i16()? as f64 * OtosAngularAcceleration
+				heading: reader.read_i16()? as f64 * OtosAngularAcceleration,
 			},
 			position_stddev: OtosPose {
 				x: reader.read_i16()? as f64 * OtosLength,
 				y: reader.read_i16()? as f64 * OtosLength,
-				heading: reader.read_i16()? as f64 * OtosAngle
+				heading: reader.read_i16()? as f64 * OtosAngle,
 			},
 			velocity_stddev: OtosVelocity {
 				x: reader.read_i16()? as f64 * OtosLinearVelocity,
 				y: reader.read_i16()? as f64 * OtosLinearVelocity,
-				heading: reader.read_i16()? as f64 * OtosAngularVelocity
+				heading: reader.read_i16()? as f64 * OtosAngularVelocity,
 			},
 			acceleration_stddev: OtosAcceleration {
 				x: reader.read_i16()? as f64 * OtosLinearAcceleration,
 				y: reader.read_i16()? as f64 * OtosLinearAcceleration,
-				heading: reader.read_i16()? as f64 * OtosAngularAcceleration
-			}
+				heading: reader.read_i16()? as f64 * OtosAngularAcceleration,
+			},
 		})
 	}
 }

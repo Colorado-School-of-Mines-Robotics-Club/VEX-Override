@@ -10,11 +10,15 @@ use vexide::{
 	time::sleep,
 };
 
-use crate::{autons::{test_mcl, test_swerve_turn}, claw::ClawSide, robot::Robot};
+use crate::{
+	autons::{test_mcl, test_swerve_turn},
+	claw::ClawSide,
+	robot::Robot,
+};
 
 pub enum GrabberPosition {
 	Intake,
-	Placing
+	Placing,
 }
 
 impl Compete for Robot {
@@ -40,7 +44,10 @@ impl Compete for Robot {
 
 		sleep(Duration::from_secs(1)).await;
 
-		_ = self.drivetrain.model.drive_vector(Vec2::new(0.0, -2.0), 1.0);
+		_ = self
+			.drivetrain
+			.model
+			.drive_vector(Vec2::new(0.0, -2.0), 1.0);
 
 		// The bot does not yet have the physical structure to actually spin stuff so we will pretend it does that for now.
 
@@ -54,7 +61,10 @@ impl Compete for Robot {
 
 		sleep(Duration::from_secs(1)).await;
 
-		_ = self.drivetrain.model.drive_vector(Vec2::new(-1.0, -1.0), 1.0);
+		_ = self
+			.drivetrain
+			.model
+			.drive_vector(Vec2::new(-1.0, -1.0), 1.0);
 
 		sleep(Duration::from_millis(500)).await;
 
@@ -66,7 +76,7 @@ impl Compete for Robot {
 
 		_ = self.claw.close(ClawSide::Front);
 
-		// The bot then searches for the nearest pin and grabs it, then putting it in the next goal. 
+		// The bot then searches for the nearest pin and grabs it, then putting it in the next goal.
 
 		// The bot then repeats the previous step with another goal and pin.
 	}
@@ -88,7 +98,7 @@ impl Compete for Robot {
 		loop {
 			if let Ok(controller) = self.controller.state() {
 				// ------------------DRIVETRAIN------------------
-				
+
 				// Drive towards position of the left stick
 				let left_y = controller.left_stick.y();
 				let left_x = controller.left_stick.x();
@@ -106,20 +116,25 @@ impl Compete for Robot {
 				if controller.button_a.is_now_pressed() {
 					_ = self.imu.borrow_mut().reset_heading();
 				}
-				
+
 				// allows the bots claw to rotate 180 degrees.
 				if controller.button_l2.is_now_pressed() {
 					if claw_turned {
-						_ = self.lift.grabber_rotate_motor.set_position(Angle::from_degrees(0.0));
-					}
-					else{
-						_ = self.lift.grabber_rotate_motor.set_position(Angle::from_degrees(180.0));
+						_ = self
+							.lift
+							.grabber_rotate_motor
+							.set_position(Angle::from_degrees(0.0));
+					} else {
+						_ = self
+							.lift
+							.grabber_rotate_motor
+							.set_position(Angle::from_degrees(180.0));
 					}
 					claw_turned = !claw_turned;
 				}
 
 				// ------------------LIFT------------------
-				
+
 				// Move lift (down/b scuff buttons)
 				let lift_velocity = if controller.button_b.is_pressed() {
 					40.0 * RotationsPerMinute
@@ -131,7 +146,7 @@ impl Compete for Robot {
 				self.lift.set_lift_angular_velocity(lift_velocity);
 
 				// ------------------CLAW------------------
-				
+
 				// Toggle between intake/place
 				if controller.button_l1.is_now_pressed() {
 					grabber_postion = match grabber_postion {
@@ -143,7 +158,7 @@ impl Compete for Robot {
 					GrabberPosition::Intake => Angle::from_degrees(0.0),
 					GrabberPosition::Placing => Angle::from_degrees(255.0),
 				});
-				
+
 				//front and back of claw
 				if controller.button_r1.is_now_pressed() {
 					_ = self.claw.toggle(ClawSide::Front);
@@ -225,4 +240,4 @@ impl Compete for Robot {
 			sleep(Duration::from_millis(10)).await;
 		}
 	}
-} 
+}

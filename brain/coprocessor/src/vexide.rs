@@ -14,7 +14,9 @@ use cobs::{CobsDecoderOwned, CobsEncoder};
 use shrewnit::{Degrees, Millimeters};
 use vexide::{prelude::SerialPort, smart::SmartPort, sync::RwLock, task::Task, time::sleep};
 
-use crate::{CoproRequest, LidarMeasurement, OtosAngle, OtosData, OtosLength, OtosPose, OtosScalars};
+use crate::{
+	CoproRequest, LidarMeasurement, OtosAngle, OtosData, OtosLength, OtosPose, OtosScalars,
+};
 
 #[derive(Clone, Debug)]
 pub struct CoprocessorSmartPort {

@@ -98,8 +98,11 @@ impl SwervePod {
 				);
 				0
 			};
-			let angle =
-				Angle::from_degrees(((angle + inner.analog_offset) % MAX_SENSOR_READING) as f64 / MAX_SENSOR_READING_FLOAT * 360.0);
+			let angle = Angle::from_degrees(
+				((angle + inner.analog_offset) % MAX_SENSOR_READING) as f64
+					/ MAX_SENSOR_READING_FLOAT
+					* 360.0,
+			);
 			let mut target_heading = pod.target_heading.get().wrapped_half();
 
 			// Optimize the path to the target heading (check if it would be faster to go to target + 180.0 and drive backwards)

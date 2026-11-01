@@ -1,7 +1,10 @@
 use std::ops::Div;
 
 use coprocessor::OtosPose;
-use shrewnit::{Degrees, DegreesPerSecond, DegreesPerSecondSquared, Inches, InchesPerSecond, InchesPerSecondSquared, Length, Radians, Time};
+use shrewnit::{
+	Degrees, DegreesPerSecond, DegreesPerSecondSquared, Inches, InchesPerSecond,
+	InchesPerSecondSquared, Length, Radians, Time,
+};
 
 pub mod otos;
 

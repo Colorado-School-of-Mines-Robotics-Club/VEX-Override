@@ -5,7 +5,7 @@ use evian::{
 	math::{Angle, Vec2},
 	tracking::{Tracking, TracksForwardTravel, TracksPosition, TracksVelocity},
 };
-use shrewnit::Length;
+use shrewnit::{Length, Radians};
 use vexide::{smart::imu::InertialSensor, sync::Mutex, time::sleep};
 
 use crate::tracking::{EvianAngularVelocity, EvianLength, EvianLinearVelocity};
@@ -31,9 +31,12 @@ impl OtosTracking {
 			loop {
 				let current_travel = forward_travel.get();
 				let current_position = otos.get().position;
-				let current_position = Vec2::new(
-					current_position.x.canonical(),
-					current_position.y.canonical(),
+				let (current_position, current_heading) = (
+					Vec2::new(
+						current_position.x.canonical(),
+						current_position.y.canonical(),
+					),
+					Angle::from_radians(current_position.heading.to::<Radians>()),
 				);
 
 				// Calculate the direction in which me moved, and how far
@@ -42,7 +45,8 @@ impl OtosTracking {
 				let distance = Length::from_canonical(movement.length());
 
 				// Calculate how far we traveled forward in the direction we went
-				// let forward_travel_delta = distance * (angle - Angle::new)
+				let heading = 1;
+				let forward_travel_delta = distance * (angle - Angle::new);
 
 				sleep(Duration::from_millis(5)).await;
 			}
