@@ -103,6 +103,7 @@ impl SwervePod {
 					/ MAX_SENSOR_READING_FLOAT
 					* 360.0,
 			);
+			// println!("Reading: {}", angle.as_degrees());
 			let mut target_heading = pod.target_heading.get().wrapped_half();
 
 			// Optimize the path to the target heading (check if it would be faster to go to target + 180.0 and drive backwards)
@@ -128,10 +129,10 @@ impl SwervePod {
 			// 		.update(current_speed.abs(), target_speed, timer.elapsed());
 
 			// Get the desired speed
-			let linear = pod.target_speed.get().to::<MetersPerSecond>() / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
+			let linear = pod.target_speed.get().to::<MetersPerSecond>() * 3.0 / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
 			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
 			let linear = if flipped { -linear } else { linear };
-			let linear = 0.0; // REMOVE
+			// let linear = 0.0; // REMOVE
 
 			// Use cosine compensation (if we are at an incorrect angle, drive slower)
 			let linear = linear * (angle - target_heading).cos();

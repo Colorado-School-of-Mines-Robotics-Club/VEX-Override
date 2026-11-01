@@ -83,5 +83,8 @@ pub async fn main(peripherals: Peripherals) {
 		],
 	)
 	.await;
-	dbg!(offsets);
+
+	for (i, offset) in offsets.enumerate() {
+		println!("Pod #{i} offset: {}, position: {}", 4096 - offset, offset);
+	}
 }

@@ -72,7 +72,7 @@ impl Compete for Robot {
 
 		_ = self.claw.open(ClawSide::Front);
 
-		sleep(Duration::from_secs(1));
+		sleep(Duration::from_secs(1)).await;
 
 		_ = self.claw.close(ClawSide::Front);
 
@@ -120,15 +120,9 @@ impl Compete for Robot {
 				// allows the bots claw to rotate 180 degrees.
 				if controller.button_l2.is_now_pressed() {
 					if claw_turned {
-						_ = self
-							.lift
-							.grabber_rotate_motor
-							.set_position(Angle::from_degrees(0.0));
+						self.lift.init_grabber_velocity_curve(Angle::from_degrees(0.0));
 					} else {
-						_ = self
-							.lift
-							.grabber_rotate_motor
-							.set_position(Angle::from_degrees(180.0));
+						self.lift.init_grabber_velocity_curve(Angle::from_degrees(180.0));
 					}
 					claw_turned = !claw_turned;
 				}
@@ -235,6 +229,8 @@ impl Compete for Robot {
 					eprintln!("Warning: controller disconnect");
 				};
 			}
+
+			self.lift.tick_grabber_velocity_curve();
 
 			i += 1;
 			sleep(Duration::from_millis(10)).await;

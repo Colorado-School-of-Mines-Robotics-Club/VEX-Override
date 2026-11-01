@@ -45,8 +45,10 @@ impl OtosTracking {
 				let distance = Length::from_canonical(movement.length());
 
 				// Calculate how far we traveled forward in the direction we went
-				let heading = 1;
-				let forward_travel_delta = distance * (angle - Angle::new);
+				let forward_travel_delta = distance * (angle - (current_heading + Angle::from_degrees(90.0))).cos();
+
+				last_position = current_position;
+				forward_travel.set(current_travel + forward_travel_delta);
 
 				sleep(Duration::from_millis(5)).await;
 			}
@@ -90,6 +92,6 @@ impl TracksVelocity for OtosTracking {
 
 impl TracksForwardTravel for OtosTracking {
 	fn forward_travel(&self) -> f64 {
-		0.0
+		self.forward_travel.get().to::<EvianLength>()
 	}
 }

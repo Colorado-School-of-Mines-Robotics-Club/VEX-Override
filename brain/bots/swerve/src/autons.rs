@@ -12,7 +12,7 @@ use mcl::{
 
 pub async fn test_mcl(robot: &mut Robot) {
 	println!("MCLing");
-	let init_pos = robot.copro.get_latest_otos();
+	let init_pos = robot.copro.get_latest_otos().position;
 	let mut mcl = MCL::new(Pose {
 		x: init_pos.x.canonical() as f32,
 		y: init_pos.y.canonical() as f32,
@@ -24,7 +24,7 @@ pub async fn test_mcl(robot: &mut Robot) {
 	loop {
 		let mut measurements = robot.copro.lidar.write().await;
 		while let Some(measurement) = measurements.pop_back() {
-			let new_pos = robot.copro.get_latest_otos();
+			let new_pos = robot.copro.get_latest_otos().position;
 			let delta = Pose {
 				x: new_pos.x.canonical() as f32 - prev_pos.x.canonical() as f32,
 				y: new_pos.y.canonical() as f32 - prev_pos.y.canonical() as f32,

@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
 
+use evian::control::loops::ArmFeedforward;
 use evian::math::Angle;
 use shrewnit::{
 	AngularVelocity, Degrees, Inches, Length, Meters, RotationsPerMinute, Voltage, Volts,
@@ -51,61 +52,6 @@ async fn wait_for_stop(motor: &Motor) {
 	}
 }
 
-pub struct VelCurve {
-	angle_min: Angle,
-	angle_max: Angle,
-	v_min: f64,
-	v_max: f64,
-	slowdown_dist: Angle,
-	min_slowdown_coeff: f64,
-}
-impl VelCurve {
-	fn new(
-		angle_min: Angle,
-		angle_max: Angle,
-		v_min: f64,
-		v_max: f64,
-		slowdown_dist: Angle,
-		min_slowdown_coeff: f64,
-	) -> VelCurve {
-		VelCurve {
-			angle_min,
-			angle_max,
-			v_min,
-			v_max,
-			slowdown_dist,
-			min_slowdown_coeff,
-		}
-	}
-	// https://www.desmos.com/calculator/fl16h8gv65
-	fn calc_vel(&self, motor: &mut Motor, target: Angle) -> i32 {
-		let mut vel = (-(self.v_max - self.v_min)
-			* (motor.position().unwrap() / (self.angle_max - self.angle_min).as_radians()).sin()
-			+ self.v_max);
-		let d = (target - motor.position().unwrap()).abs();
-		if d < self.slowdown_dist {
-			vel *= min_slowdown_coeff
-				+ d.as_radians() * (1 - self.min_slowdown_coeff) / self.slowdown_dist.as_radians();
-		}
-		return vel as i32;
-	}
-	fn start_session(&mut self, motor: &mut Motor, target: Angle) {
-		motor.set_position_target(target, self.calc_vel(motor, target));
-	}
-	fn tick(&mut self, motor: &mut Motor, target: Angle) {
-		motor.set_profiled_velocity(self.calc_vel(motor, target));
-	}
-}
-
-const GRABBER_VEL_CURVE: VelCurve = VelCurve {
-	angle_min: Angle.from_degrees(0.0),
-	angle_max: Angle.from_degrees(250.0),
-	v_min: 100.0,
-	v_max: 300.0,
-	slowdown_dist: Angle.from_degrees(30),
-	min_slowdown_coeff: 0.4,
-};
-
 #[derive(Debug)]
 pub struct Dr4bLift {
 	l_motor: Motor,
@@ -114,7 +60,7 @@ pub struct Dr4bLift {
 	grabber_lift_motor: Motor,
 	pub grabber_rotate_motor: Motor,
 
-	target_pos: Length,
+	vel_curve_target: Option<Angle>,
 }
 
 impl Dr4bLift {
@@ -129,7 +75,7 @@ impl Dr4bLift {
 			r_motor,
 			grabber_lift_motor,
 			grabber_rotate_motor,
-			target_pos: 0.0 * Meters,
+			vel_curve_target: None,
 		}
 	}
 
@@ -223,8 +169,6 @@ impl Dr4bLift {
 	// 	(ARM1_LENGTH + ARM2_LENGTH) * angle.sin() + OFFSET
 	// }
 
-	pub fn tick_velocity_curve() {}
-
 	pub fn set_lift_angle(&mut self, mut angle: Angle) {
 		angle = if angle > MAXIMUM_MOTOR_ANGLE {
 			MAXIMUM_MOTOR_ANGLE
@@ -285,4 +229,47 @@ impl Dr4bLift {
 				.clamp_magnitude(self.grabber_lift_motor.max_voltage()),
 		);
 	}
+
+	// https://www.desmos.com/calculator/fl16h8gv65
+	fn calc_vel_curve(target: Angle, pos: Angle) -> f64 {
+		let mut vel = -(VEL_CURVE_V_MAX - VEL_CURVE_V_MIN)
+			* (PI as f64 * pos.as_radians()
+				/ (VEL_CURVE_ANGLE_MAX - VEL_CURVE_ANGLE_MIN).as_radians())
+			.sin() + VEL_CURVE_V_MAX;
+		let d = (target - pos).abs();
+		if d < VEL_CURVE_SLOWDOWN_DIST {
+			vel *= VEL_CURVE_MIN_SLOWDOWN_COEFF
+				+ d.as_radians() * (1.0 - VEL_CURVE_MIN_SLOWDOWN_COEFF)
+					/ VEL_CURVE_SLOWDOWN_DIST.as_radians();
+		}
+		vel
+	}
+	pub fn init_grabber_velocity_curve(&mut self, target: Angle) {
+		self.vel_curve_target = Some(target);
+		_ = self.grabber_lift_motor.set_position_target(
+			target * MOTOR_GEAR_RATIO,
+			Self::calc_vel_curve(
+				target * MOTOR_GEAR_RATIO,
+				self.grabber_lift_motor.position().unwrap(),
+			) as i32,
+		);
+	}
+	pub fn tick_grabber_velocity_curve(&mut self) {
+		if let Some(target) = self.vel_curve_target {
+			_ = self
+				.grabber_lift_motor
+				.set_profiled_velocity(Self::calc_vel_curve(
+					target,
+					self.grabber_lift_motor.position().unwrap(),
+				) as i32);
+		}
+	}
 }
+
+// = Velocity curve =
+const VEL_CURVE_ANGLE_MIN: Angle = Angle::from_degrees(0.0 * MOTOR_GEAR_RATIO);
+const VEL_CURVE_ANGLE_MAX: Angle = Angle::from_degrees(250.0 * MOTOR_GEAR_RATIO);
+const VEL_CURVE_V_MIN: f64 = 200.0;
+const VEL_CURVE_V_MAX: f64 = 400.0;
+const VEL_CURVE_SLOWDOWN_DIST: Angle = Angle::from_degrees(60.0);
+const VEL_CURVE_MIN_SLOWDOWN_COEFF: f64 = 0.1;
