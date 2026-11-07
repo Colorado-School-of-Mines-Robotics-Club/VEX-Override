@@ -32,4 +32,5 @@ embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 
 [profile.release]
 lto = true
+opt-level = 3
 debug = 2

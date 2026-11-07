@@ -12,6 +12,7 @@ use static_cell::StaticCell;
 use crate::{
 	i2c::muxer::I2cMuxer,
 	pio::{blinker::setup_blinker_sm, ws2812b::setup_ws2812b_sm},
+	utils::SharedBrainUart,
 };
 
 // Define aliases for the peripheral types to reduce duplication
@@ -46,6 +47,7 @@ bind_interrupts!(pub struct Irq {
 	PIO0_IRQ_0 => pio::InterruptHandler<BlinkerPIO>;
 });
 
+#[allow(dead_code)] // Whether we use it or not doesn't matter, we should still have it set up
 pub struct CoproPeripherals<'a> {
 	/// Watchdog timer to detect and reset on stalls
 	pub watchdog: watchdog::Watchdog,
@@ -58,9 +60,7 @@ pub struct CoproPeripherals<'a> {
 	/// Muxer over I2C
 	pub muxer: I2cMuxer<'a, MuxerI2C>,
 	/// RS-485 tranciever UART
-	pub brain_uart: Uart<'a, uart::Async>,
-	/// RS-485 enable pin, High = Transmit, Low = Recieve
-	pub brain_enable_pin: Output<'a>,
+	pub brain_uart: SharedBrainUart,
 	/// PIO state machine for blinking an LED
 	pub blinker_sm: StateMachine<'a, BlinkerPIO, BLINKER_STATE_MACHINE>,
 	/// PIO state machine for controlling WS2812b RGB LEDs
@@ -93,7 +93,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 		let rx_uart = unsafe { tx_uart.clone_unchecked() };
 		(
 			UartTx::new(tx_uart, p.PIN_4, p.DMA_CH3, Irq, {
-				// 460800 8n1 UART for brain communication
+				// 460800 8n1 UART for LIDAR communication
 				let mut cfg = uart::Config::default();
 				cfg.baudrate = 460800;
 				cfg.data_bits = DataBits::DataBits8;
@@ -110,7 +110,7 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 					BUF.init([0u8; _])
 				},
 				{
-					// 460800 8n1 UART for brain communication
+					// 460800 8n1 UART for LIDAR communication
 					let mut cfg = uart::Config::default();
 					cfg.baudrate = 460800;
 					cfg.data_bits = DataBits::DataBits8;
@@ -135,16 +135,18 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 			cfg
 		}),
 		muxer: I2cMuxer::new(p.I2C1, p.PIN_10, p.PIN_11, Irq),
-		brain_enable_pin: Output::new(p.PIN_14, Level::Low),
-		brain_uart: Uart::new(p.UART0, p.PIN_0, p.PIN_1, Irq, p.DMA_CH0, p.DMA_CH1, {
-			// 921600 8n1 UART for brain communication
-			let mut cfg = uart::Config::default();
-			cfg.baudrate = 921600;
-			cfg.data_bits = DataBits::DataBits8;
-			cfg.stop_bits = StopBits::STOP1;
-			cfg.parity = Parity::ParityNone;
-			cfg
-		}),
+		brain_uart: SharedBrainUart::new(
+			Uart::new(p.UART0, p.PIN_0, p.PIN_1, Irq, p.DMA_CH0, p.DMA_CH1, {
+				// 921600 8n1 UART for brain communication
+				let mut cfg = uart::Config::default();
+				cfg.baudrate = 921600;
+				cfg.data_bits = DataBits::DataBits8;
+				cfg.stop_bits = StopBits::STOP1;
+				cfg.parity = Parity::ParityNone;
+				cfg
+			}),
+			Output::new(p.PIN_13, Level::Low),
+		),
 		lidar_uart: (tx_uart, rx_uart),
 		blinker_sm,
 		leds_sm,

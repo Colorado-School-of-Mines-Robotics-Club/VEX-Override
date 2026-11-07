@@ -1,5 +1,3 @@
-#![feature(clamp_magnitude)]
-
 mod autons;
 mod compete;
 mod robot;

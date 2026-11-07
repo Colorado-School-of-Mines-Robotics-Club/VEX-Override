@@ -23,8 +23,12 @@ mcl = { path = "../../mcl" }
 
 # [[bin]]
 # path = "./src/main.rs"
-# name = "swerve"
+# name = "0swerve"
 
 # [[bin]]
 # path = "./pod_angles.rs"
 # name = "pod_angles"
+
+# [[bin]]
+# path = "./tune_arm.rs"
+# name = "tune_arm"

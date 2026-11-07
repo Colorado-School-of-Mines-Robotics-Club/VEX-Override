@@ -33,7 +33,7 @@ pub struct OtosData {
 impl OtosData {
 	pub fn parse_from_binary(data: &[u8]) -> Option<Self> {
 		let mut reader = LittleEndianReader::new(data);
-		Some(Self {
+		let parsed = Self {
 			status: reader.read_u8()?,
 			position: OtosPose {
 				x: reader.read_i16()? as f64 * OtosLength,
@@ -65,7 +65,12 @@ impl OtosData {
 				y: reader.read_i16()? as f64 * OtosLinearAcceleration,
 				heading: reader.read_i16()? as f64 * OtosAngularAcceleration,
 			},
-		})
+		};
+		if reader.has_bits_remaining(1) {
+			None // Ensure we have nothing left to parse as a sanity check
+		} else {
+			Some(parsed)
+		}
 	}
 }
 

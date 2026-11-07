@@ -7,8 +7,8 @@ use common::{
 };
 use coprocessor::vexide::CoprocessorSmartPort;
 use evian::{
-	control::loops::AngularPid,
-	math::{Angle, Vec2},
+	control::loops::{AngularPid, ArmFeedforward},
+	math::Vec2,
 	prelude::*,
 };
 use shrewnit::Inches;
@@ -38,34 +38,7 @@ impl Robot {
 		println!("IMU calibrated...");
 		let imu = Rc::new(RefCell::new(imu));
 
-		// Setup DR4B
-		let lift = Dr4bLift::new(
-			// DR4B left & right
-			Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
-			Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
-			// Grabber lift
-			Motor::new_exp(peripherals.port_13, Direction::Reverse),
-			// Grabber rotate
-			Motor::new_exp(peripherals.port_12, Direction::Forward),
-		);
-
 		Robot {
-			// convention:
-			// a: top gear
-			// b: bottom gear
-
-			// motors:
-			// right front a: 4
-			// right front b: 3
-
-			// right back a: 5
-			// right back b: 2
-
-			// left front a: 7
-			// left front b: 6
-
-			// left back a: 8
-			// left back b: 9
 			drivetrain: Drivetrain::new(
 				DifferentalSwerve::new(
 					[
@@ -75,7 +48,7 @@ impl Robot {
 								Motor::new(peripherals.port_8, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_9, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_g),
-								4096 - 4015 + 2048,
+								2129,
 								AngularPid::new(50.0, 0.0, 0.0, None),
 							),
 							Vec2::new(-5.75 * Inches, -4.5 * Inches),
@@ -86,7 +59,7 @@ impl Robot {
 								Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_2, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_e),
-								4096 - 2030 + 2048,
+								4114,
 								AngularPid::new(50.0, 0.0, 0.0, None),
 							),
 							Vec2::new(5.75 * Inches, -4.5 * Inches),
@@ -97,7 +70,7 @@ impl Robot {
 								Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_f),
-								(4096 - 2933 + 2048) % 4096,
+								3211,
 								AngularPid::new(50.0, 0.0, 0.0, None),
 							),
 							Vec2::new(5.75 * Inches, 4.5 * Inches),
@@ -108,7 +81,7 @@ impl Robot {
 								Motor::new(peripherals.port_7, Gearset::Blue, Direction::Forward),
 								Motor::new(peripherals.port_6, Gearset::Blue, Direction::Forward),
 								AdiAnalogIn::new(peripherals.adi_h),
-								4096 - 815,
+								3281,
 								AngularPid::new(50.0, 0.0, 0.0, None),
 							),
 							Vec2::new(-5.75 * Inches, 4.5 * Inches),
@@ -118,7 +91,11 @@ impl Robot {
 				),
 				(),
 			),
-			lift,
+			lift: Dr4bLift::new(
+				// DR4B left & right
+				Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
+				Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
+			),
 			intake: Intake {
 				roller_motor: Motor::new(peripherals.port_18, Gearset::Blue, Direction::Forward),
 				top_motor: Motor::new_exp(peripherals.port_14, Direction::Reverse),
@@ -132,6 +109,7 @@ impl Robot {
 				high_state: LicensePlate::Red,
 			},
 			claw: Claw::new(
+				// Pneumatics
 				AdiPneumatic::new(
 					peripherals.adi_a,
 					PneumaticState::Extended,
@@ -142,6 +120,12 @@ impl Robot {
 					PneumaticState::Extended,
 					PneumaticState::Contracted,
 				),
+				// Claw arm
+				Motor::new_exp(peripherals.port_13, Direction::Reverse),
+				// Claw rotate
+				Motor::new_exp(peripherals.port_12, Direction::Forward),
+				// Arm feedforward
+				ArmFeedforward::new(0.0, 0.1, 0.0, 0.0),
 			),
 		}
 	}

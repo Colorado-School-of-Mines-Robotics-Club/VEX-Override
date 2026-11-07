@@ -1,4 +1,4 @@
-use std::{cell::RefCell, convert::Infallible, f64::consts::FRAC_PI_2, rc::Rc, sync::RwLock};
+use std::{cell::RefCell, convert::Infallible, f64::consts::FRAC_PI_2, rc::Rc};
 
 use evian::{
 	drivetrain::model::DrivetrainModel,
@@ -48,10 +48,6 @@ impl Holonomic for DifferentalSwerve {
 				vector.rotated(self.imu.borrow().heading().unwrap_or_default().as_radians());
 			let vec = vector + cross;
 
-			// println!(
-			// 	"Pod desired heading: {}",
-			// 	Angle::atan2(vec.y, vec.x).as_degrees()
-			// );
 			pod.set_heading(Angle::atan2(vec.y, vec.x) + Angle::from_degrees(90.0));
 			pod.set_speed(LinearVelocity::from_canonical(vec.length()));
 		}

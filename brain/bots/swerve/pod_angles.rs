@@ -84,7 +84,7 @@ pub async fn main(peripherals: Peripherals) {
 	)
 	.await;
 
-	for (i, offset) in offsets.enumerate() {
+	for (i, offset) in offsets.iter().enumerate() {
 		println!("Pod #{i} offset: {}, position: {}", 4096 - offset, offset);
 	}
 }

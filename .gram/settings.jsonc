@@ -17,6 +17,11 @@
                     "pico/Cargo.toml",
                     // "rplidar/Cargo.toml"
                 ],
+                "inlayHints": {
+                    "parameterHints": {
+                        "enable": true
+                    }
+                }
             },
         },
     },

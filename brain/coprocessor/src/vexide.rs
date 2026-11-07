@@ -106,7 +106,9 @@ impl CoprocessorSmartPort {
 					Ok(Some(len)) => {
 						let decoded = &decoder.dest()[..len];
 						match decoded[0] {
+							// LIDAR measurement
 							b'l' => {
+								println!("LIDAR");
 								lidar.write().await.push_back(LidarMeasurement {
 									angle: f32::from_le_bytes(decoded[1..5].try_into().unwrap())
 										as f64 * Degrees,
@@ -115,6 +117,7 @@ impl CoprocessorSmartPort {
 									quality: decoded[9],
 								});
 							}
+							// OTOS measurement
 							b'o' => {
 								// First byte is stats
 								// Next is position
@@ -122,11 +125,13 @@ impl CoprocessorSmartPort {
 									otos.replace(parsed);
 								};
 							}
+							// Encoder measurement
 							b'a' => {
 								// One u16 is sent, upper 4 bits are the encoder index, rest is value
 								let data = u16::from_le_bytes(decoded[1..3].try_into().unwrap());
 								encoders[(data >> 12) as usize].replace(data & 0x0FFF);
 							}
+							// Pico requesting updates from brain
 							b'r' => {
 								// Reuse decoder buffer for encoding, since we don't need to read the decoded message anymore
 								let mut encoder = CobsEncoder::new(decoder.dest_mut());

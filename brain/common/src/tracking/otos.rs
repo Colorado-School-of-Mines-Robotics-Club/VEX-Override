@@ -3,23 +3,32 @@ use std::{cell::Cell, rc::Rc, time::Duration};
 use coprocessor::{OtosData, vexide::CoprocessorSmartPort};
 use evian::{
 	math::{Angle, Vec2},
-	tracking::{Tracking, TracksForwardTravel, TracksPosition, TracksVelocity},
+	tracking::{Tracking, TracksForwardTravel, TracksHeading, TracksPosition, TracksVelocity},
 };
 use shrewnit::{Length, Radians};
-use vexide::{smart::imu::InertialSensor, sync::Mutex, time::sleep};
+use vexide::time::sleep;
 
-use crate::tracking::{EvianAngularVelocity, EvianLength, EvianLinearVelocity};
+use crate::{
+	shared_imu::SharedImu,
+	tracking::{EvianAngularVelocity, EvianLength, EvianLinearVelocity},
+};
 
+/// An evian tracking implementation, using an OTOS sensor for position measurements.
+///
+/// If a [SharedImu] is provided, it will be used for heading measurements instead of
+/// the OTOS sensor.
 pub struct OtosTracking {
 	otos: Rc<Cell<OtosData>>,
 	forward_travel: Rc<Cell<Length>>,
+	imu: Option<SharedImu>,
 }
 
 impl OtosTracking {
-	pub async fn main(copro: &CoprocessorSmartPort) -> Self {
+	pub fn new(copro: &CoprocessorSmartPort, imu: Option<SharedImu>) -> Self {
 		let tracking = Self {
 			otos: copro.otos(),
 			forward_travel: Default::default(),
+			imu,
 		};
 
 		let forward_travel = tracking.forward_travel.clone();
@@ -45,7 +54,8 @@ impl OtosTracking {
 				let distance = Length::from_canonical(movement.length());
 
 				// Calculate how far we traveled forward in the direction we went
-				let forward_travel_delta = distance * (angle - (current_heading + Angle::from_degrees(90.0))).cos();
+				let forward_travel_delta =
+					distance * (angle - (current_heading + Angle::from_degrees(90.0))).cos();
 
 				last_position = current_position;
 				forward_travel.set(current_travel + forward_travel_delta);
@@ -53,7 +63,7 @@ impl OtosTracking {
 				sleep(Duration::from_millis(5)).await;
 			}
 		})
-		.await;
+		.detach();
 
 		tracking
 	}
@@ -71,6 +81,16 @@ impl TracksPosition for OtosTracking {
 	}
 }
 
+impl TracksHeading for OtosTracking {
+	fn heading(&self) -> Angle {
+		if let Some(imu) = &self.imu {
+			imu.get_heading()
+		} else {
+			Angle::from_radians(self.otos.get().position.heading.to::<Radians>())
+		}
+	}
+}
+
 impl TracksVelocity for OtosTracking {
 	fn linear_velocity(&self) -> f64 {
 		let velocity = self.otos.get().velocity;
@@ -82,11 +102,12 @@ impl TracksVelocity for OtosTracking {
 	}
 
 	fn angular_velocity(&self) -> f64 {
-		self.otos
-			.get()
-			.velocity
-			.heading
-			.to::<EvianAngularVelocity>()
+		if let Some(imu) = &self.imu {
+			imu.get_angular_velocity()
+		} else {
+			self.otos.get().velocity.heading
+		}
+		.to::<EvianAngularVelocity>()
 	}
 }
 

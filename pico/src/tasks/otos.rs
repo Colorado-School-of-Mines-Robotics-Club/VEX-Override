@@ -1,13 +1,14 @@
 use core::task::Poll;
 
 use bytemuck::{AnyBitPattern, NoUninit};
-use defmt::{error, info};
+use cobs::CobsEncoder;
+use defmt::{error, info, warn};
 use embassy_futures::poll_once;
 use embassy_rp::{
 	i2c::{self, I2c},
 	peripherals::I2C0,
 };
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_time::{Duration, Ticker};
 use embedded_rpc::RpcService;
 
@@ -15,6 +16,7 @@ use crate::{
 	i2c_regs,
 	peripherals::OtosI2C,
 	tasks::blinker::{BlinkStatusUpdate, STATUS_UPDATES},
+	utils::SharedBrainUart,
 };
 
 // https://github.com/sparkfun/SparkFun_Optical_Tracking_Odometry_Sensor/blob/main/Firmware/OTOS_Register_Map.pdf
@@ -115,9 +117,9 @@ i2c_regs!(
 pub const READINGS_LOWER: u8 = STATUS;
 pub const READINGS_UPPER: u8 = ACCELERATION_STDDEV_H_H;
 
-type ReadingsBuffer = [u8; { READINGS_UPPER - READINGS_LOWER + 1 } as usize];
+pub const READINGS_LEN: usize = READINGS_UPPER as usize - READINGS_LOWER as usize + 1;
+type ReadingsBuffer = [u8; READINGS_LEN];
 
-pub static LATEST_READINGS: Signal<CriticalSectionRawMutex, ReadingsBuffer> = Signal::new();
 pub static SERVICE: RpcService<CriticalSectionRawMutex, OtosAction, Result<(), ()>> =
 	RpcService::new();
 
@@ -163,9 +165,10 @@ pub enum OtosAction {
 }
 
 #[embassy_executor::task]
-pub async fn otos_task(mut i2c: I2c<'static, I2C0, i2c::Async>) {
+pub async fn otos_task(mut i2c: I2c<'static, I2C0, i2c::Async>, uart: SharedBrainUart) {
 	let mut ticker = Ticker::every(Duration::from_millis(5));
 	let mut buf: ReadingsBuffer = [0u8; _];
+	let mut cobs_buf: [u8; cobs::max_encoding_length(READINGS_LEN + 1) + 1] = [0u8; _];
 	wait_for_otos(&mut i2c).await;
 	_ = calibrate(&mut i2c).await;
 
@@ -216,8 +219,17 @@ pub async fn otos_task(mut i2c: I2c<'static, I2C0, i2c::Async>) {
 			continue;
 		}
 
-		LATEST_READINGS.signal(buf);
+		// Encode and send readings
+		let mut encoder = CobsEncoder::new(&mut cobs_buf);
+		_ = encoder.push(b"o");
+		_ = encoder.push(&buf);
+		let len = encoder.finalize();
+		cobs_buf[len] = 0x00;
+		if let Err(e) = uart.send(&cobs_buf[..=len]).await {
+			warn!("Error sending OTOS to brain: {}", e);
+		}
 
+		// Wait for the next time we need to send readings
 		ticker.next().await;
 	}
 }
