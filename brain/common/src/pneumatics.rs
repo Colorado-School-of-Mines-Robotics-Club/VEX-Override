@@ -71,4 +71,11 @@ impl AdiPneumatic {
 	pub fn contract(&mut self) -> Result<(), PortError> {
 		self.set_state(PneumaticState::Contracted)
 	}
+
+	pub fn toggle(&mut self) -> Result<(), PortError> {
+		match self.current_state {
+			PneumaticState::Extended => self.set_state(PneumaticState::Contracted),
+			PneumaticState::Contracted => self.set_state(PneumaticState::Extended),
+		}
+	}
 }

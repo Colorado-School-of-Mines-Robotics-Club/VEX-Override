@@ -16,8 +16,8 @@ use crate::{
 };
 
 // Define aliases for the peripheral types to reduce duplication
-pub type OtosI2C = I2C0;
-pub type MuxerI2C = I2C1;
+pub type OtosI2C = I2C1; // TEMP
+// pub type MuxerI2C = I2C1;
 pub type BrainUART = UART0;
 pub type BrainUARTTxDMA = DMA_CH0;
 pub type BrainUARTRxDMA = DMA_CH1;
@@ -42,8 +42,8 @@ bind_interrupts!(pub struct Irq {
 		dma::InterruptHandler<LedsDMA>,
 		dma::InterruptHandler<LidarUARTTxDMA>,
 		dma::InterruptHandler<LidarUARTRxDMA>;
-	I2C0_IRQ => i2c::InterruptHandler<OtosI2C>;
-	I2C1_IRQ => i2c::InterruptHandler<MuxerI2C>;
+	// I2C0_IRQ => i2c::InterruptHandler<OtosI2C>; TEMP
+	I2C1_IRQ => i2c::InterruptHandler<OtosI2C>;
 	PIO0_IRQ_0 => pio::InterruptHandler<BlinkerPIO>;
 });
 
@@ -58,7 +58,7 @@ pub struct CoproPeripherals<'a> {
 	/// OTOS over I2C
 	pub otos: I2c<'a, OtosI2C, i2c::Async>,
 	/// Muxer over I2C
-	pub muxer: I2cMuxer<'a, MuxerI2C>,
+	// pub muxer: I2cMuxer<'a, MuxerI2C>,
 	/// RS-485 tranciever UART
 	pub brain_uart: SharedBrainUart,
 	/// PIO state machine for blinking an LED
@@ -128,13 +128,13 @@ pub fn setup_peripherals(p: Peripherals) -> CoproPeripherals<'static> {
 		led2: Output::new(p.PIN_3, Level::Low),
 		button: Input::new(p.PIN_12, Pull::Up),
 		// secondary_bootsel: Input::new(p.PIN_17, Pull::Up),
-		otos: I2c::new_async(p.I2C0, p.PIN_9, p.PIN_8, Irq, {
+		otos: I2c::new_async(p.I2C1, p.PIN_11, p.PIN_10, Irq, {
 			// Use 1MBit/s speed for otos i2c
 			let mut cfg = i2c::Config::default();
 			cfg.frequency = 1_000_000;
 			cfg
 		}),
-		muxer: I2cMuxer::new(p.I2C1, p.PIN_10, p.PIN_11, Irq),
+		// muxer: I2cMuxer::new(p.I2C1, p.PIN_10, p.PIN_11, Irq),
 		brain_uart: SharedBrainUart::new(
 			Uart::new(p.UART0, p.PIN_0, p.PIN_1, Irq, p.DMA_CH0, p.DMA_CH1, {
 				// 921600 8n1 UART for brain communication

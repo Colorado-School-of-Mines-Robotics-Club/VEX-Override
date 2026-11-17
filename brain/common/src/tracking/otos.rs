@@ -17,6 +17,7 @@ use crate::{
 ///
 /// If a [SharedImu] is provided, it will be used for heading measurements instead of
 /// the OTOS sensor.
+#[derive(Debug)]
 pub struct OtosTracking {
 	otos: Rc<Cell<OtosData>>,
 	forward_travel: Rc<Cell<Length>>,

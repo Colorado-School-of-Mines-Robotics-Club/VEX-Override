@@ -1,4 +1,4 @@
-use defmt::{info, warn};
+use defmt::{info, trace, warn};
 use embassy_futures::{join::join, select::Either};
 use embassy_time::{Duration, Ticker, WithTimeout};
 use static_cell::StaticCell;
@@ -33,7 +33,7 @@ pub async fn brain_rx(uart: SharedBrainUart) {
 		request_ticker.next().await;
 
 		// Request updates
-		info!("Requesting brain updates");
+		trace!("Requesting brain updates");
 		_ = uart.send(&[0x02, b'r', 0x00]).await;
 
 		// Wait for updates
@@ -59,13 +59,16 @@ pub async fn brain_rx(uart: SharedBrainUart) {
 
 		let mut cursor = 0;
 		while cursor < len {
-			cursor += 1;
-			match cobs_buf[cursor] {
+			cursor += match cobs_buf[cursor] {
 				b'c' => {
 					_ = otos::SERVICE
 						.request(OtosAction::Calibrate)
 						.with_timeout(Duration::from_secs(2))
 						.await;
+
+					info!("OTOS calibrated");
+
+					1
 				}
 				b'p' => {
 					_ = otos::SERVICE
@@ -77,6 +80,10 @@ pub async fn brain_rx(uart: SharedBrainUart) {
 						)))
 						.with_timeout(Duration::from_secs(1))
 						.await;
+
+					info!("OTOS position set");
+
+					7
 				}
 				b's' => {
 					_ = join(
@@ -95,8 +102,15 @@ pub async fn brain_rx(uart: SharedBrainUart) {
 					)
 					.with_timeout(Duration::from_secs(1))
 					.await;
+
+					info!("OTOS offset and scalrs set");
+
+					9
 				}
-				unknown => warn!("Unexpected request packet: {}", unknown),
+				unknown => {
+					warn!("Unexpected request packet: {}", unknown);
+					1
+				}
 			}
 		}
 	}

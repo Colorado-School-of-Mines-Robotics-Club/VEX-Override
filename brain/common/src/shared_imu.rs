@@ -19,6 +19,7 @@ use vexide::{
 /// Measurements are reported on a best-effort basis: if the sensor disconnects
 /// or starts calibrating, measurements will not update and will return the last
 /// good data.
+#[derive(Clone, Debug)]
 pub struct SharedImu {
 	imu: Rc<Mutex<InertialSensor>>,
 	cached_heading: Rc<Cell<Angle>>,

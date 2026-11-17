@@ -12,7 +12,7 @@ const MOTOR_GEAR_RATIO: f64 = 3.0;
 
 /// The maximum angle that the motors can be put at (gear ratio included) before we reach the max height
 /// Used as a safeguard against destroying the bot & motors
-const MAXIMUM_MOTOR_ANGLE: Angle = Angle::from_degrees(138.0);
+const MAXIMUM_MOTOR_ANGLE: Angle = Angle::from_degrees(130.0);
 
 #[derive(Debug)]
 pub struct Dr4bLift {

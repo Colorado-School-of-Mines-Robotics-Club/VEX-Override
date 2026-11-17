@@ -1,18 +1,19 @@
 #![allow(dead_code)]
 use std::time::Duration;
 
-use common::tracking::EvianLength;
+use common::{differential::Brake, tracking::EvianLength};
 use evian::{
 	control::{
 		Tolerances,
 		loops::{AngularPid, Pid},
 	},
+	drivetrain::model::Arcade,
 	math::Angle,
 	motion::Basic,
 	tracking::{TracksHeading, TracksPosition as _},
 };
 use shrewnit::{Inches, Length, One};
-use vexide::time::sleep;
+use vexide::{smart::motor::BrakeMode, time::sleep};
 
 use crate::robot::Robot;
 
@@ -65,4 +66,11 @@ pub async fn tune_pid(robot: &mut Robot) {
 	// 		start_heading + Angle::from_degrees(90.0),
 	// 	)
 	// 	.await;
+}
+
+pub async fn score_16(robot: &mut Robot) {
+	_ = robot.drivetrain.model.drive_arcade(0.65, 0.0);
+	sleep(Duration::from_secs(1)).await;
+	_ = robot.drivetrain.model.brake(BrakeMode::Hold);
+	sleep(Duration::from_secs(100000)).await;
 }

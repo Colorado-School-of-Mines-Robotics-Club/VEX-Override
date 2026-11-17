@@ -129,7 +129,7 @@ impl SwervePod {
 			// 		.update(current_speed.abs(), target_speed, timer.elapsed());
 
 			// Get the desired speed
-			let linear = pod.target_speed.get().to::<MetersPerSecond>() * 3.0 / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
+			let linear = pod.target_speed.get().to::<MetersPerSecond>() * 1.5 / WHEEL_RADIUS.to::<Meters>() /* m/s / m = rad/s */;
 			let linear = (linear * RadiansPerSecond).to::<RotationsPerMinute>();
 			let linear = if flipped { -linear } else { linear };
 			// let linear = 0.0; // REMOVE
@@ -142,12 +142,21 @@ impl SwervePod {
 			// 	turn = 0.0;
 			// }
 
-			_ = inner
-				.motor_a
-				.set_velocity((turn / ANGULAR_GEAR_RATIO + linear / LINEAR_GEAR_RATIO) as i32);
-			_ = inner
-				.motor_b
-				.set_velocity((turn / ANGULAR_GEAR_RATIO - linear / LINEAR_GEAR_RATIO) as i32);
+			// _ = inner
+			// 	.motor_a
+			// 	.set_velocity((turn / ANGULAR_GEAR_RATIO + linear / LINEAR_GEAR_RATIO) as i32);
+			// _ = inner
+			// 	.motor_b
+			// 	.set_velocity((turn / ANGULAR_GEAR_RATIO - linear / LINEAR_GEAR_RATIO) as i32);
+
+			_ = inner.motor_a.set_voltage(
+				(((turn / ANGULAR_GEAR_RATIO + linear / LINEAR_GEAR_RATIO) as i32) as f64 / 700.0)
+					* inner.motor_a.max_voltage(),
+			);
+			_ = inner.motor_b.set_voltage(
+				(((turn / ANGULAR_GEAR_RATIO - linear / LINEAR_GEAR_RATIO) as i32) as f64 / 700.0)
+					* inner.motor_b.max_voltage(),
+			);
 
 			timer = Instant::now();
 			sleep(Duration::from_millis(10)).await;

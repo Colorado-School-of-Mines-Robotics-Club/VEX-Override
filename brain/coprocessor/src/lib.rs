@@ -95,7 +95,7 @@ pub struct OtosAcceleration {
 	pub heading: AngularAcceleration,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct OtosScalars {
 	pub linear: i8,
 	pub angular: i8,

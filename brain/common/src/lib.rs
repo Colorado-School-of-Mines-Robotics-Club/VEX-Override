@@ -1,4 +1,5 @@
 pub mod arm;
+pub mod cascade;
 pub mod differential;
 pub mod license_plate;
 pub mod pneumatics;

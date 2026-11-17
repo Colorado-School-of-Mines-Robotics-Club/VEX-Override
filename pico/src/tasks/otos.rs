@@ -9,7 +9,7 @@ use embassy_rp::{
 	peripherals::I2C0,
 };
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_time::{Duration, Ticker};
+use embassy_time::{Duration, Ticker, WithTimeout};
 use embedded_rpc::RpcService;
 
 use crate::{
@@ -165,7 +165,7 @@ pub enum OtosAction {
 }
 
 #[embassy_executor::task]
-pub async fn otos_task(mut i2c: I2c<'static, I2C0, i2c::Async>, uart: SharedBrainUart) {
+pub async fn otos_task(mut i2c: I2c<'static, OtosI2C, i2c::Async>, uart: SharedBrainUart) {
 	let mut ticker = Ticker::every(Duration::from_millis(5));
 	let mut buf: ReadingsBuffer = [0u8; _];
 	let mut cobs_buf: [u8; cobs::max_encoding_length(READINGS_LEN + 1) + 1] = [0u8; _];
@@ -280,6 +280,7 @@ async fn wait_for_otos<'a>(i2c: &mut I2c<'a, OtosI2C, i2c::Async>) {
 	loop {
 		if let Err(e) = i2c
 			.write_read_async(ADDR, [PRODUCT_ID], core::slice::from_mut(&mut buf))
+			.with_timeout(Duration::from_millis(500))
 			.await
 		{
 			error!("Unable to read product ID from OTOS sensor: {:?}", e);

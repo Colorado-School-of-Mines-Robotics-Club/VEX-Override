@@ -1,13 +1,18 @@
 use std::time::Duration;
 
-use evian::{math::Vec2, prelude::Holonomic as _};
+use evian::{
+	drivetrain::model::Arcade,
+	math::{Angle, Vec2},
+	prelude::Holonomic as _,
+};
 use shrewnit::{AngularVelocity, DegreesPerSecond, Volts};
 use vexide::{
 	prelude::{Compete, Motor},
+	smart::motor::BrakeMode,
 	time::sleep,
 };
 
-use crate::{autons::test_otos, claw::ClawSide, robot::Robot};
+use crate::{claw::ClawSide, robot::Robot};
 
 impl Compete for Robot {
 	async fn disabled(&mut self) {
@@ -17,8 +22,12 @@ impl Compete for Robot {
 	async fn autonomous(&mut self) {
 		println!("Autonomous!");
 
-		self.copro.calibrate_otos();
+		// self.copro.calibrate_otos();
+		// It broked????
 
+		self.lift.zero().await;
+		self.lift.set_lift_angle(Angle::from_degrees(15.0));
+		self.claw.zero().await;
 		sleep(Duration::from_secs(10000000)).await;
 
 		// test_otos(self).await;
@@ -27,7 +36,9 @@ impl Compete for Robot {
 	async fn driver(&mut self) {
 		println!("Driver!");
 
-		self.lift.zero().await;
+		// self.lift.zero().await;
+		// self.lift.set_lift_angle(Angle::from_degrees(15.0));
+		// self.claw.zero().await;
 
 		let mut i = 0;
 		loop {
@@ -39,11 +50,15 @@ impl Compete for Robot {
 
 				// Turn based on right stick
 				let right_x = controller.right_stick.x();
-				let turn: AngularVelocity<f64> = 180.0 * DegreesPerSecond * -right_x;
+				let turn: AngularVelocity<f64> = 240.0 * DegreesPerSecond * -right_x;
 
 				self.drivetrain
 					.model
 					.drive_vector(heading, turn.canonical());
+				// _ = self
+				// 	.drivetrain
+				// 	.model
+				// 	.drive_arcade(controller.left_stick.y(), controller.right_stick.x());
 
 				// Move lift (down/b scuff buttons)
 				if controller.button_b.is_pressed() {
@@ -52,6 +67,24 @@ impl Compete for Robot {
 					self.lift.set_lift_voltage(-2.0 * Volts);
 				} else {
 					self.lift.set_lift_voltage(0.0 * Volts);
+				}
+
+				// Move claw (right/y scuff buttons)
+				if controller.button_right.is_pressed() {
+					self.claw.control(50);
+				} else if controller.button_y.is_pressed() {
+					self.claw.control(-50);
+				} else {
+					self.claw.control(0);
+				}
+
+				// Rotate claw (l1/l2)
+				if controller.button_l1.is_pressed() {
+					self.claw.rotate(50);
+				} else if controller.button_l2.is_pressed() {
+					self.claw.rotate(-50);
+				} else {
+					self.claw.rotate(0);
 				}
 
 				// Toggle claws
@@ -63,18 +96,18 @@ impl Compete for Robot {
 				}
 
 				// Control intake
-				if controller.button_left.is_pressed() {
-					self.intake.intake_full(-Motor::EXP_MAX_VOLTAGE * Volts);
-					self.intake
-						.set_roller_voltage(-Motor::V5_MAX_VOLTAGE * Volts);
-				} else if controller.button_l2.is_pressed() {
-					self.intake.intake_full(Motor::EXP_MAX_VOLTAGE * Volts);
-					self.intake
-						.set_roller_voltage(Motor::V5_MAX_VOLTAGE * Volts);
-				} else {
-					self.intake.set_roller_voltage(0.0 * Volts);
-					self.intake.intake_full(0.0 * Volts);
-				}
+				// if controller.button_left.is_pressed() {
+				// 	self.intake.intake_full(-Motor::EXP_MAX_VOLTAGE * Volts);
+				// 	self.intake
+				// 		.set_roller_voltage(-Motor::V5_MAX_VOLTAGE * Volts);
+				// } else if controller.button_l2.is_pressed() {
+				// 	self.intake.intake_full(Motor::EXP_MAX_VOLTAGE * Volts);
+				// 	self.intake
+				// 		.set_roller_voltage(Motor::V5_MAX_VOLTAGE * Volts);
+				// } else {
+				// 	self.intake.set_roller_voltage(0.0 * Volts);
+				// 	self.intake.intake_full(0.0 * Volts);
+				// }
 
 				// Experimental Code for messing with the elevator and the claw. Not yet tested,
 				// Control Scheme:
